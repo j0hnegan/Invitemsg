@@ -1343,7 +1343,7 @@ function MainContent() {
   };
 
   return (
-    <div style={{ gridColumn: 'span 9' }}>
+    <div style={{ gridColumn: 'span 6' }}>
       <div className="bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start p-[24px] rounded-[4px] w-full">
         <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
           Invitation Settings
