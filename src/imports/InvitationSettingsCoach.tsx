@@ -475,7 +475,7 @@ function Frame3() {
 
 function Sidebar() {
   return (
-    <div className="col-span-3">
+    <div style={{ gridColumn: 'span 3' }}>
       <div className="bg-[#27272a] content-stretch flex gap-[10px] items-center overflow-clip px-[10px] py-[11px] rounded-[6px] w-full">
         <Frame3 />
         <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
@@ -1343,7 +1343,7 @@ function MainContent() {
   };
 
   return (
-    <div className="col-span-9">
+    <div style={{ gridColumn: 'span 9' }}>
       <div className="bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start p-[24px] rounded-[4px] w-full">
         <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
           Invitation Settings
@@ -1364,8 +1364,8 @@ export default function InvitationSettingsCoach() {
       </nav>
 
       {/* Main content area with 12-column grid */}
-      <div className="flex-1 px-[24px] pt-[24px]">
-        <div className="grid grid-cols-12 gap-[24px]">
+      <div style={{ flex: 1, padding: '24px 24px 0 24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '24px' }}>
           {/* Sidebar - 3 columns */}
           <Sidebar />
 
