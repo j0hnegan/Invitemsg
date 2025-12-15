@@ -1,7 +1,7 @@
 import svgPaths from "./svg-12qi7k655n";
-import imgEllipse32 from "figma:asset/e26d77c3d6ca4aa4ac07a856b5ce37cfddb76ece.png";
-import imgFrame824 from "figma:asset/caeeddc62ff6b56dd620c8c68abc11c54b02c3a7.png";
-import imgCoachRxWhite6855787D72E0Da9E54266727C85E549A1 from "figma:asset/8988f58f3d77ccefb92f92d04b4880d9a969c424.png";
+import imgEllipse32 from "../assets/e26d77c3d6ca4aa4ac07a856b5ce37cfddb76ece.png";
+import imgFrame824 from "../assets/caeeddc62ff6b56dd620c8c68abc11c54b02c3a7.png";
+import imgCoachRxWhite6855787D72E0Da9E54266727C85E549A1 from "../assets/8988f58f3d77ccefb92f92d04b4880d9a969c424.png";
 import { useState, useRef, useEffect } from "react";
 import { toast, Toaster } from "sonner@2.0.3";
 import { X } from "lucide-react";
@@ -473,13 +473,15 @@ function Frame3() {
   );
 }
 
-function Frame21() {
+function Sidebar() {
   return (
-    <div className="absolute bg-[#27272a] content-stretch flex gap-[10px] items-center left-[24px] overflow-clip px-[10px] py-[11px] rounded-[6px] top-[96px] w-[212px]">
-      <Frame3 />
-      <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
-        Invitation Settings
-      </p>
+    <div style={{ gridColumn: 'span 3' }}>
+      <div className="bg-[#27272a] content-stretch flex gap-[10px] items-center overflow-clip px-[10px] py-[11px] rounded-[6px] w-full">
+        <Frame3 />
+        <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
+          Invitation Settings
+        </p>
+      </div>
     </div>
   );
 }
@@ -498,7 +500,22 @@ interface TextSegment {
   type: 'text' | 'chip';
   content: string;
   id?: string;
+  color?: string;
 }
+
+// Tailwind-based color schemes for chips
+const chipColors: Record<string, { bg: string; text: string; border: string }> = {
+  "Client's first name": { bg: '#132e1c', text: '#4ade80', border: '#4ade80' },    // green
+  "Client's full name": { bg: '#1e1b4b', text: '#a5b4fc', border: '#a5b4fc' },     // indigo
+  "Coach's first name": { bg: '#3b1c32', text: '#f472b6', border: '#f472b6' },     // pink
+  "Coach's full name": { bg: '#1e3a5f', text: '#38bdf8', border: '#38bdf8' },      // sky
+  "Organization name": { bg: '#422006', text: '#fbbf24', border: '#fbbf24' },      // amber
+  "Coach booking link": { bg: '#2d1f3d', text: '#c084fc', border: '#c084fc' },     // purple
+};
+
+const getChipColor = (content: string) => {
+  return chipColors[content] || { bg: '#032e15', text: '#05df72', border: '#05df72' };
+};
 
 function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCursorChange, containerRef: externalRef, onUndo, onRedo }: { 
   segments: TextSegment[]; 
@@ -592,26 +609,30 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
 
     segments.forEach((segment) => {
       if (segment.type === 'chip') {
+        const colors = getChipColor(segment.content);
         const chipSpan = document.createElement('span');
-        chipSpan.className = 'inline-flex items-center gap-[2px] bg-[#032e15] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[#05df72] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+        chipSpan.className = 'inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+        chipSpan.style.backgroundColor = colors.bg;
+        chipSpan.style.color = colors.text;
         chipSpan.contentEditable = 'false';
         chipSpan.setAttribute('data-chip-id', segment.id!);
-        chipSpan.style.border = '1px solid #05df72';
-        
+        chipSpan.style.border = `1px solid ${colors.border}`;
+
         const textSpan = document.createElement('span');
         textSpan.className = "font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic";
         textSpan.style.fontVariationSettings = "'wdth' 100";
         textSpan.textContent = segment.content;
-        
+
         const button = document.createElement('button');
-        button.className = 'rounded-full p-[2px] text-[#05df72]';
+        button.className = 'rounded-full p-[2px]';
+        button.style.color = colors.text;
         button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
         button.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
           handleRemoveChip(segment.id!);
         };
-        
+
         chipSpan.appendChild(textSpan);
         chipSpan.appendChild(button);
         container.appendChild(chipSpan);
@@ -1156,21 +1177,25 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     }
 
     const chipId = `chip-${Date.now()}-${Math.random()}`;
-    
+    const colors = getChipColor(variable);
+
     // Create the chip element with new style
     const chipSpan = document.createElement('span');
-    chipSpan.className = 'inline-flex items-center gap-[2px] bg-[#032e15] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[#05df72] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+    chipSpan.className = 'inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+    chipSpan.style.backgroundColor = colors.bg;
+    chipSpan.style.color = colors.text;
     chipSpan.contentEditable = 'false';
     chipSpan.setAttribute('data-chip-id', chipId);
-    chipSpan.style.border = '1px solid #05df72';
-    
+    chipSpan.style.border = `1px solid ${colors.border}`;
+
     const textSpan = document.createElement('span');
     textSpan.className = "font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic";
     textSpan.style.fontVariationSettings = "'wdth' 100";
     textSpan.textContent = variable;
-    
+
     const button = document.createElement('button');
-    button.className = 'rounded-full p-[2px] text-[#05df72]';
+    button.className = 'rounded-full p-[2px]';
+    button.style.color = colors.text;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     button.onclick = (e) => {
       e.preventDefault();
@@ -1243,20 +1268,23 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
                     <p className="leading-none">Personalize</p>
                   </div>
                   <div className="content-start flex flex-wrap gap-x-[6px] gap-y-[5px] items-start relative shrink-0 w-full">
-                    {variables.map((variable) => (
-                      <button
-                        key={variable}
-                        onMouseDown={(e) => {
-                          // Prevent blur when clicking the chip
-                          e.preventDefault();
-                        }}
-                        onClick={() => insertVariable(variable)}
-                        className="bg-[#032e15] relative inline-flex items-center rounded-[6px] px-[6px] py-[2px] text-[#05df72] text-[12px] cursor-pointer hover:bg-[#043a19] transition-colors"
-                        style={{ border: '1px solid #05df72' }}
-                      >
-                        <span className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>{variable}</span>
-                      </button>
-                    ))}
+                    {variables.map((variable) => {
+                      const colors = getChipColor(variable);
+                      return (
+                        <button
+                          key={variable}
+                          onMouseDown={(e) => {
+                            // Prevent blur when clicking the chip
+                            e.preventDefault();
+                          }}
+                          onClick={() => insertVariable(variable)}
+                          className="relative inline-flex items-center rounded-[6px] px-[6px] py-[2px] text-[12px] cursor-pointer transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
+                        >
+                          <span className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>{variable}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1299,7 +1327,8 @@ function Button3() {
 
 function Button4({ onClick }: { onClick: () => void }) {
   return (
-    <button 
+    <button
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className="bg-[#3db2e0] content-stretch flex items-center justify-center p-[10px] relative rounded-[8px] shrink-0 cursor-pointer"
       data-name="Button"
@@ -1320,7 +1349,7 @@ function ButtonGroup({ onSave }: { onSave: () => void }) {
   );
 }
 
-function Frame22() {
+function MainContent() {
   const [segments, setSegments] = useState<TextSegment[]>([
     { type: 'text', content: "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." }
   ]);
@@ -1335,36 +1364,45 @@ function Frame22() {
         background: '#22c55e',
         color: 'white',
         border: 'none',
+        width: 'auto',
+        minWidth: 'unset',
       },
       position: 'bottom-left',
     });
   };
 
   return (
-    <div className="absolute bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start left-[260px] p-[24px] rounded-[4px] top-[96px] w-[564px]">
-      <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px] w-[427px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        Invitation Settings
-      </p>
-      <Frame23 segments={segments} setSegments={setSegments} savedSegments={savedSegments} />
-      <ButtonGroup onSave={handleSave} />
+    <div style={{ gridColumn: 'span 6' }}>
+      <div className="bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start p-[24px] rounded-[4px] w-full">
+        <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
+          Invitation Settings
+        </p>
+        <Frame23 segments={segments} setSegments={setSegments} savedSegments={savedSegments} />
+        <ButtonGroup onSave={handleSave} />
+      </div>
     </div>
   );
 }
 
 export default function InvitationSettingsCoach() {
   return (
-    <div className="bg-[#171719] relative size-full" data-name="Invitation Settings - Coach">
-      <div className="absolute h-0 left-[31px] top-[-121px] w-[1121px]">
-        <div className="absolute inset-[-1px_0_0_0]">
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 1121 1">
-            <line id="Line 13" stroke="var(--stroke-0, #2C2C2C)" x2="1121" y1="0.5" y2="0.5" />
-          </svg>
+    <div className="bg-[#171719] min-h-screen flex flex-col" data-name="Invitation Settings - Coach">
+      {/* Nav - Full width (12 columns) */}
+      <nav className="w-full px-[24px] py-[11px]">
+        <HeaderNav />
+      </nav>
+
+      {/* Main content area with 12-column grid */}
+      <div style={{ flex: 1, padding: '24px 24px 0 24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '24px' }}>
+          {/* Sidebar - 3 columns */}
+          <Sidebar />
+
+          {/* Main content - 9 columns */}
+          <MainContent />
         </div>
       </div>
-      <Tasks />
-      <NavMain />
-      <Frame21 />
-      <Frame22 />
+
       <Toaster />
     </div>
   );
