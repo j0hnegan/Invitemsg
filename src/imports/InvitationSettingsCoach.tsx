@@ -1,7 +1,7 @@
 import svgPaths from "./svg-12qi7k655n";
-import imgEllipse32 from "figma:asset/e26d77c3d6ca4aa4ac07a856b5ce37cfddb76ece.png";
-import imgFrame824 from "figma:asset/caeeddc62ff6b56dd620c8c68abc11c54b02c3a7.png";
-import imgCoachRxWhite6855787D72E0Da9E54266727C85E549A1 from "figma:asset/8988f58f3d77ccefb92f92d04b4880d9a969c424.png";
+import imgEllipse32 from "@/assets/e26d77c3d6ca4aa4ac07a856b5ce37cfddb76ece.png";
+import imgFrame824 from "@/assets/caeeddc62ff6b56dd620c8c68abc11c54b02c3a7.png";
+import imgCoachRxWhite6855787D72E0Da9E54266727C85E549A1 from "@/assets/8988f58f3d77ccefb92f92d04b4880d9a969c424.png";
 import { useState, useRef, useEffect } from "react";
 import { toast, Toaster } from "sonner@2.0.3";
 import { X } from "lucide-react";
