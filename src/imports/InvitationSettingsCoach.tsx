@@ -475,7 +475,7 @@ function Frame3() {
 
 function Sidebar() {
   return (
-    <div style={{ gridColumn: 'span 3' }}>
+    <div style={{ gridColumn: 'span 2' }}>
       <div className="bg-[#27272a] content-stretch flex gap-[10px] items-center overflow-clip px-[10px] py-[11px] rounded-[6px] w-full">
         <Frame3 />
         <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
@@ -534,13 +534,96 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
   const shouldPreserveCursorRef = useRef(false);
   const savedCursorPositionRef = useRef<{ segmentIndex: number; offset: number } | null>(null);
   const skipDOMRebuildRef = useRef(false);
+  const enterKeyPressedRef = useRef(false);
+  const previousSegmentsRef = useRef<TextSegment[]>([]);
+  const needsRebuildRef = useRef(false);
+
+  // Helper to check if segments are truly empty (no chips, no text content)
+  const isSegmentsEmpty = (segs: TextSegment[]): boolean => {
+    if (segs.length === 0) return true;
+    if (segs.length === 1 && segs[0].type === 'text' && segs[0].content.trim() === '') return true;
+    // Check if all segments are empty text
+    const hasChips = segs.some(s => s.type === 'chip');
+    if (hasChips) return false;
+    const allText = segs.every(s => s.type === 'text');
+    if (!allText) return false;
+    const allEmpty = segs.every(s => s.type === 'text' && s.content.trim() === '');
+    return allEmpty;
+  };
+
+  // Helper to determine chip margins based on context
+  const getChipMargins = (segmentIndex: number, segments: TextSegment[], previousNode: Node | null = null): { ml: string; mr: string } => {
+    // Check if previous segment is a chip (adjacent chips - only 4px total between them)
+    const prevIsChip = segmentIndex > 0 && segments[segmentIndex - 1].type === 'chip';
+    
+    // Check if at start of line
+    let atStartOfLine = false;
+    if (segmentIndex === 0) {
+      atStartOfLine = true;
+    } else {
+      // Check if previous segment ends with newline
+      const prevSegment = segments[segmentIndex - 1];
+      if (prevSegment.type === 'text' && prevSegment.content.endsWith('\n')) {
+        atStartOfLine = true;
+      }
+    }
+    
+    // Also check DOM context if previousNode is provided
+    if (previousNode) {
+      if (!previousNode.previousSibling) {
+        atStartOfLine = true;
+      } else if (previousNode.previousSibling.nodeType === Node.TEXT_NODE) {
+        const text = previousNode.previousSibling.textContent || '';
+        if (text.endsWith('\n')) {
+          atStartOfLine = true;
+        }
+      } else if (previousNode.previousSibling.nodeName === 'BR' || 
+                 (previousNode.previousSibling.nodeType === Node.ELEMENT_NODE && 
+                  (previousNode.previousSibling as HTMLElement).tagName === 'DIV')) {
+        atStartOfLine = true;
+      }
+    }
+    
+    // Left margin: 0 if at start of line or previous is chip, otherwise 4px
+    const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[4px]';
+    // Right margin: always 4px (next chip will handle its left margin)
+    const mr = 'mr-[4px]';
+    
+    return { ml, mr };
+  };
+
+  // Helper to check if segments structure changed (chips added/removed)
+  const segmentsStructureChanged = (prev: TextSegment[], curr: TextSegment[]): boolean => {
+    if (prev.length !== curr.length) return true;
+    
+    // Check if chip IDs changed
+    const prevChipIds = prev.filter(s => s.type === 'chip').map(s => s.id).sort();
+    const currChipIds = curr.filter(s => s.type === 'chip').map(s => s.id).sort();
+    if (JSON.stringify(prevChipIds) !== JSON.stringify(currChipIds)) return true;
+    
+    // Check if chip positions changed
+    for (let i = 0; i < prev.length; i++) {
+      if (prev[i].type !== curr[i].type) return true;
+      if (prev[i].type === 'chip' && prev[i].id !== curr[i].id) return true;
+    }
+    
+    return false;
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Skip entire DOM rebuild if Enter was just pressed
-    if (skipDOMRebuildRef.current) {
-      skipDOMRebuildRef.current = false;
+    // Check if structure changed (chips added/removed)
+    const isInitialRender = previousSegmentsRef.current.length === 0 && segments.length > 0;
+    const structureChanged = !isInitialRender && segmentsStructureChanged(previousSegmentsRef.current, segments);
+    previousSegmentsRef.current = segments;
+    
+    // Skip entire DOM rebuild if Enter was just pressed and structure didn't change
+    if ((skipDOMRebuildRef.current || enterKeyPressedRef.current) && !structureChanged && !isInitialRender) {
+      if (!enterKeyPressedRef.current) {
+        skipDOMRebuildRef.current = false;
+      }
+      // Don't rebuild DOM, just return - the browser has already inserted the line break
       return;
     }
     
@@ -568,50 +651,53 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       return;
     }
 
-    // Save cursor position before rebuilding
-    const selection = window.getSelection();
-    if (shouldPreserveCursorRef.current && selection && selection.rangeCount > 0 && containerRef.current.contains(selection.anchorNode!)) {
-      const range = selection.getRangeAt(0);
-      const cursorNode = range.startContainer;
-      const cursorOffset = range.startOffset;
-      
-      // Find which segment and offset the cursor is in
-      let segmentIndex = 0;
-      let offsetInSegment = cursorOffset;
-      
-      // Walk through DOM nodes to find cursor position
-      let currentNode = containerRef.current.firstChild;
-      let foundCursor = false;
-      
-      while (currentNode && !foundCursor) {
-        if (currentNode === cursorNode) {
-          foundCursor = true;
-          offsetInSegment = cursorOffset;
-        } else if (currentNode.contains(cursorNode)) {
-          // Cursor is inside a chip, position after the chip
-          foundCursor = true;
-          segmentIndex++;
-          offsetInSegment = 0;
-        } else {
-          segmentIndex++;
-          currentNode = currentNode.nextSibling;
-        }
-      }
-      
-      if (foundCursor) {
-        savedCursorPositionRef.current = { segmentIndex, offset: offsetInSegment };
-      }
+    // Check if content is truly empty (only whitespace/newlines)
+    const isEmpty = isSegmentsEmpty(segments);
+    
+    // Also check if DOM appears empty (might have just a <br> tag)
+    const domAppearsEmpty = containerRef.current && 
+                           (containerRef.current.childNodes.length === 0 || 
+                            (containerRef.current.childNodes.length === 1 && 
+                             containerRef.current.childNodes[0].nodeName === 'BR' &&
+                             containerRef.current.textContent?.trim() === ''));
+    
+    // If empty, always clear DOM to ensure :empty pseudo-class works for placeholder
+    if (isEmpty && containerRef.current) {
+      // Always clear DOM when segments are empty to ensure :empty works
+      // This handles cases where DOM might have leftover <br> from browser
+      containerRef.current.innerHTML = '';
+      shouldPreserveCursorRef.current = false;
+      savedCursorPositionRef.current = null;
+      // Don't rebuild segments since we're empty
+      return;
     }
+    
+    // Also handle case where DOM appears empty but segments might not be synced yet
+    if (domAppearsEmpty && isEmpty) {
+      // Already handled above, but this is a safety check
+      return;
+    }
+    
+    // Only rebuild DOM if structure changed (chips added/removed), initial render, or explicitly needed
+    // For regular text input, let the browser handle it naturally
+    if (!structureChanged && !needsRebuildRef.current && !isInitialRender) {
+      // Structure didn't change, so just sync text content without full rebuild
+      // This preserves the cursor position naturally
+      return;
+    }
+    
+    needsRebuildRef.current = false;
 
     // Sync segments to DOM content
     const container = containerRef.current;
     container.innerHTML = '';
 
-    segments.forEach((segment) => {
+    segments.forEach((segment, index) => {
       if (segment.type === 'chip') {
         const colors = getChipColor(segment.content);
+        const margins = getChipMargins(index, segments);
         const chipSpan = document.createElement('span');
-        chipSpan.className = 'inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+        chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${margins.ml} ${margins.mr} my-[1.5px] whitespace-nowrap relative`;
         chipSpan.style.backgroundColor = colors.bg;
         chipSpan.style.color = colors.text;
         chipSpan.contentEditable = 'false';
@@ -624,7 +710,7 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
         textSpan.textContent = segment.content;
 
         const button = document.createElement('button');
-        button.className = 'rounded-full p-[2px]';
+        button.className = 'rounded-full p-[2px] cursor-pointer';
         button.style.color = colors.text;
         button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
         button.onclick = (e) => {
@@ -647,35 +733,112 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       const { segmentIndex, offset } = savedCursorPositionRef.current;
       const selection = window.getSelection();
       
-      let currentIndex = 0;
-      let targetNode: Node | null = null;
-      
-      for (let i = 0; i < container.childNodes.length; i++) {
-        const node = container.childNodes[i];
-        if (currentIndex === segmentIndex) {
-          if (node.nodeType === Node.TEXT_NODE) {
-            targetNode = node;
+      // Use requestAnimationFrame to ensure DOM is fully updated before restoring cursor
+      const restoreCursor = () => {
+        // Use character offset restoration when segmentIndex is 0 (flag for offset-based restoration)
+        // This works for both Enter key and regular typing
+        if (segmentIndex === 0 && offset >= 0) {
+          let charCount = 0;
+          let targetNode: Node | null = null;
+          let targetOffset = 0;
+          
+          // Walk through all nodes to find the character position
+          // Only count text nodes, skip chips
+          const walkNodes = (node: Node) => {
+            if (targetNode) return; // Already found
+            
+            if (node.nodeType === Node.TEXT_NODE) {
+              const textContent = node.textContent || '';
+              const textLength = textContent.length;
+              
+              // Check if our target offset is within this text node
+              if (charCount + textLength >= offset) {
+                targetNode = node;
+                targetOffset = offset - charCount;
+                return;
+              }
+              charCount += textLength;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as HTMLElement;
+              // Skip chips - don't count their characters for cursor positioning
+              if (!element.hasAttribute('data-chip-id')) {
+                // For other elements, process their text children
+                for (let i = 0; i < element.childNodes.length; i++) {
+                  walkNodes(element.childNodes[i]);
+                  if (targetNode) return;
+                }
+              }
+              // Chips are skipped - their text doesn't count toward cursor position
+            }
+          };
+          
+          for (let i = 0; i < container.childNodes.length; i++) {
+            walkNodes(container.childNodes[i]);
+            if (targetNode) break;
           }
-          break;
+          
+          if (targetNode && targetNode.nodeType === Node.TEXT_NODE) {
+            const range = document.createRange();
+            const clampedOffset = Math.min(Math.max(0, targetOffset), targetNode.textContent?.length || 0);
+            try {
+              range.setStart(targetNode, clampedOffset);
+              range.setEnd(targetNode, clampedOffset);
+              selection?.removeAllRanges();
+              selection?.addRange(range);
+              // Focus the container to ensure cursor is visible
+              if (containerRef.current) {
+                containerRef.current.focus();
+              }
+              enterKeyPressedRef.current = false;
+              shouldPreserveCursorRef.current = false;
+              savedCursorPositionRef.current = null;
+              return;
+            } catch (e) {
+              // Fall through to segment-based restoration
+            }
+          }
         }
-        currentIndex++;
-      }
-      
-      if (targetNode && targetNode.nodeType === Node.TEXT_NODE) {
-        const range = document.createRange();
-        const clampedOffset = Math.min(offset, targetNode.textContent?.length || 0);
-        try {
-          range.setStart(targetNode, clampedOffset);
-          range.setEnd(targetNode, clampedOffset);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        } catch (e) {
-          // Couldn't restore cursor
+        
+        // Fallback to segment-based restoration
+        let currentIndex = 0;
+        let targetNode: Node | null = null;
+        
+        for (let i = 0; i < container.childNodes.length; i++) {
+          const node = container.childNodes[i];
+          if (currentIndex === segmentIndex) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              targetNode = node;
+            }
+            break;
+          }
+          currentIndex++;
         }
-      }
+        
+        if (targetNode && targetNode.nodeType === Node.TEXT_NODE) {
+          const range = document.createRange();
+          const clampedOffset = Math.min(offset, targetNode.textContent?.length || 0);
+          try {
+            range.setStart(targetNode, clampedOffset);
+            range.setEnd(targetNode, clampedOffset);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            if (containerRef.current) {
+              containerRef.current.focus();
+            }
+          } catch (e) {
+            // Couldn't restore cursor
+          }
+        }
+        
+        enterKeyPressedRef.current = false;
+        shouldPreserveCursorRef.current = false;
+        savedCursorPositionRef.current = null;
+      };
       
-      shouldPreserveCursorRef.current = false;
-      savedCursorPositionRef.current = null;
+      // Use requestAnimationFrame to ensure DOM is fully rendered
+      requestAnimationFrame(() => {
+        requestAnimationFrame(restoreCursor);
+      });
     }
   }, [segments]);
 
@@ -742,15 +905,16 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
   const handleInput = () => {
     if (!containerRef.current) return;
 
-    // Mark that we want to preserve cursor position (unless skipping DOM rebuild)
-    if (!skipDOMRebuildRef.current) {
-      shouldPreserveCursorRef.current = true;
-    }
-
     const container = containerRef.current;
     const newSegments: TextSegment[] = [];
     
     // Helper function to recursively extract text and chips
+    const sanitizeText = (text: string) =>
+      text
+        // Drop placeholder NBSP/zero-width chars used for caret positioning
+        .replace(/\u00A0/g, '')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '');
+
     const extractContent = (node: Node) => {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as HTMLElement;
@@ -794,7 +958,7 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
         }
       } else if (node.nodeType === Node.TEXT_NODE) {
         // This is text
-        const text = node.textContent || '';
+        const text = sanitizeText(node.textContent || '');
         if (newSegments.length > 0 && newSegments[newSegments.length - 1].type === 'text') {
           newSegments[newSegments.length - 1].content += text;
         } else {
@@ -807,6 +971,98 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     };
     
     container.childNodes.forEach(node => extractContent(node));
+
+    // Check if structure changed (will trigger rebuild)
+    const structureChanged = segmentsStructureChanged(previousSegmentsRef.current, newSegments);
+    
+    // Only save cursor position if structure changed (will need rebuild)
+    if (structureChanged) {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && containerRef.current.contains(selection.anchorNode!)) {
+        const range = selection.getRangeAt(0);
+        
+        // Calculate character offset excluding chip content
+        let charOffset = 0;
+        const walkNodes = (node: Node): boolean => {
+          if (node === range.startContainer) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              charOffset += range.startOffset;
+            }
+            return true; // Found cursor position
+          }
+          
+          if (node.nodeType === Node.TEXT_NODE) {
+            charOffset += node.textContent?.length || 0;
+            return false;
+          }
+          
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as HTMLElement;
+            // Skip chips entirely - don't count their characters
+            if (element.hasAttribute('data-chip-id')) {
+              return false;
+            }
+            
+            // Check if cursor is inside this element
+            if (element.contains(range.startContainer)) {
+              // Process children to find cursor
+              for (let i = 0; i < node.childNodes.length; i++) {
+                if (walkNodes(node.childNodes[i])) {
+                  return true; // Found cursor in this branch
+                }
+              }
+            } else {
+              // Count text content before cursor
+              for (let i = 0; i < node.childNodes.length; i++) {
+                const child = node.childNodes[i];
+                if (child.nodeType === Node.TEXT_NODE) {
+                  charOffset += child.textContent?.length || 0;
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                  const childEl = child as HTMLElement;
+                  if (!childEl.hasAttribute('data-chip-id')) {
+                    walkNodes(child);
+                  }
+                }
+              }
+            }
+          }
+          
+          return false;
+        };
+        
+        for (let i = 0; i < containerRef.current.childNodes.length; i++) {
+          if (walkNodes(containerRef.current.childNodes[i])) break;
+        }
+        
+        // Store cursor position for restoration after DOM rebuild
+        savedCursorPositionRef.current = { segmentIndex: 0, offset: charOffset };
+        shouldPreserveCursorRef.current = true;
+        needsRebuildRef.current = true;
+      }
+    }
+    
+    // If we were skipping rebuild (from Enter), allow rebuilds now since user is typing
+    if (skipDOMRebuildRef.current || enterKeyPressedRef.current) {
+      skipDOMRebuildRef.current = false;
+      enterKeyPressedRef.current = false;
+    }
+
+    // Normalize empty content: consolidate all empty text segments into one empty segment
+    const hasChips = newSegments.some(s => s.type === 'chip');
+    const allTextEmpty = newSegments.every(s => s.type === 'text' && s.content.trim() === '');
+    
+    if (!hasChips && allTextEmpty && newSegments.length > 0) {
+      // Consolidate all empty text segments into a single empty segment
+      newSegments = [{ type: 'text', content: '' }];
+    } else {
+      // Normalize individual empty text segments
+      newSegments = newSegments.map(seg => {
+        if (seg.type === 'text' && seg.content.trim() === '') {
+          return { ...seg, content: '' };
+        }
+        return seg;
+      });
+    }
 
     onSegmentsChange(newSegments);
   };
@@ -867,12 +1123,35 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
 
     // Handle Enter key - let browser create the line break, then sync
     if (e.key === 'Enter') {
-      // Don't prevent default - let browser handle the line break
-      // We'll sync the segments after the browser updates the DOM
+      // Don't prevent default - let browser handle the line break naturally
+      // The browser will insert a <br> or create a new line
+      // We'll sync segments after, but won't rebuild DOM to preserve cursor position
+      
+      // Mark that Enter was pressed so we can skip DOM rebuild
+      enterKeyPressedRef.current = true;
       skipDOMRebuildRef.current = true;
+      
+      // Save the current selection to restore after sync
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        cursorRestoreRef.current = {
+          node: range.startContainer,
+          offset: range.startOffset
+        };
+      }
+      
+      // Sync segments after browser inserts the line break
       setTimeout(() => {
         handleInput();
+        // After syncing segments, allow DOM rebuilds again but skip this one
+        // The cursor should already be in the right place from the browser
+        setTimeout(() => {
+          enterKeyPressedRef.current = false;
+          skipDOMRebuildRef.current = false;
+        }, 10);
       }, 0);
+      
       return;
     }
 
@@ -913,8 +1192,8 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       onBlur={onBlur}
       onKeyDown={handleKeyDown}
       className={`w-full min-h-[44px] font-['Mona_Sans:Regular',sans-serif] font-normal leading-[1.35] not-italic text-[16px] transition-colors duration-200 ${textColor} outline-none whitespace-pre-wrap break-words`}
-      style={{ fontVariationSettings: "'wdth' 100", wordWrap: 'break-word' }}
-      data-placeholder={segments.length === 1 && segments[0].type === 'text' && segments[0].content === '' ? "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." : ""}
+      style={{ fontVariationSettings: "'wdth' 100", wordWrap: 'break-word', caretColor: '#ffffff' }}
+      data-placeholder={isSegmentsEmpty(segments) ? "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." : ""}
     />
   );
 }
@@ -1021,32 +1300,53 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
   useEffect(() => {
     if (pendingCursorAfterChipRef.current && editableRef.current) {
       const chipId = pendingCursorAfterChipRef.current;
-      const chipElement = editableRef.current.querySelector(`[data-chip-id="${chipId}"]`);
-      
-      if (chipElement) {
-        const range = document.createRange();
-        const selection = window.getSelection();
-        
-        // Find the next text node after the chip
-        let nextNode = chipElement.nextSibling;
-        if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
-          range.setStart(nextNode, 0);
-          range.setEnd(nextNode, 0);
-        } else {
-          // If no text node after, create one
-          const textNode = document.createTextNode('\u200B');
-          chipElement.parentNode?.insertBefore(textNode, chipElement.nextSibling);
-          range.setStart(textNode, 0);
-          range.setEnd(textNode, 0);
+
+      // Let the DOM finish updating before positioning the caret
+      requestAnimationFrame(() => {
+        if (!editableRef.current) {
+          pendingCursorAfterChipRef.current = null;
+          return;
         }
+
+        const chipElement = editableRef.current.querySelector(`[data-chip-id="${chipId}"]`);
+        if (!chipElement) {
+          pendingCursorAfterChipRef.current = null;
+          return;
+        }
+
+        // Focus the element first
+        editableRef.current.focus();
+
+        // Position cursor directly after the chip element
+        const range = document.createRange();
         
+        // Check if there's a text node after the chip with actual content
+        let nextNode = chipElement.nextSibling;
+        if (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.textContent && nextNode.textContent.length > 0) {
+          // Position at start of existing text node
+          // Skip any leading zero-width characters
+          let offset = 0;
+          const text = nextNode.textContent;
+          while (offset < text.length && /[\u200B-\u200D\uFEFF]/.test(text[offset])) {
+            offset++;
+          }
+          range.setStart(nextNode, offset);
+        } else {
+          // No text after chip - position cursor directly after the chip element
+          // This tells the browser to place the caret at the boundary after the chip
+          range.setStartAfter(chipElement);
+        }
+        range.collapse(true);
+
+        const selection = window.getSelection();
         selection?.removeAllRanges();
         selection?.addRange(range);
         
+        // Force focus again to ensure caret renders
         editableRef.current.focus();
-      }
-      
-      pendingCursorAfterChipRef.current = null;
+
+        pendingCursorAfterChipRef.current = null;
+      });
     } else if (pendingCursorPositionRef.current && editableRef.current) {
       // Position cursor after chip removal
       const { segmentIndex, offset } = pendingCursorPositionRef.current;
@@ -1094,55 +1394,56 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
   const handleRemoveChip = (chipId: string) => {
     if (!editableRef.current) return;
     
-    // Find which segment index the chip is at
-    const chipIndex = segments.findIndex(seg => seg.id === chipId);
-    if (chipIndex === -1) return;
+    // Find the chip element directly in the DOM (avoids stale closure issues)
+    const chipElement = editableRef.current.querySelector(`[data-chip-id="${chipId}"]`);
+    if (!chipElement) return;
     
-    // Determine where cursor should go after removal
-    let targetSegmentIndex = chipIndex - 1;
-    let targetOffset = 0;
+    // Find where to place cursor after removal
+    const prevNode = chipElement.previousSibling;
+    const nextNode = chipElement.nextSibling;
+    let targetNode: Node;
+    let targetOffset: number;
     
-    if (targetSegmentIndex >= 0 && segments[targetSegmentIndex].type === 'text') {
-      // Place at end of previous text segment
-      targetOffset = segments[targetSegmentIndex].content.length;
-    } else if (chipIndex + 1 < segments.length && segments[chipIndex + 1].type === 'text') {
-      // Place at start of next text segment
-      targetSegmentIndex = chipIndex;
+    if (prevNode && prevNode.nodeType === Node.TEXT_NODE) {
+      // Place cursor at end of previous text
+      targetNode = prevNode;
+      targetOffset = prevNode.textContent?.length || 0;
+    } else if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
+      // Place cursor at start of next text
+      targetNode = nextNode;
       targetOffset = 0;
     } else {
-      // No adjacent text, we'll create one
-      targetSegmentIndex = chipIndex;
+      // Create a new text node where the chip was
+      targetNode = document.createTextNode('');
+      chipElement.parentNode?.insertBefore(targetNode, chipElement);
       targetOffset = 0;
     }
     
-    const newSegments = segments.filter(seg => seg.id !== chipId);
+    // Remove the chip from DOM
+    chipElement.remove();
     
-    // Consolidate adjacent text segments
-    const consolidatedSegments: TextSegment[] = [];
-    for (let i = 0; i < newSegments.length; i++) {
-      const current = newSegments[i];
-      if (current.type === 'text' && consolidatedSegments.length > 0 && consolidatedSegments[consolidatedSegments.length - 1].type === 'text') {
-        consolidatedSegments[consolidatedSegments.length - 1].content += current.content;
-      } else {
-        consolidatedSegments.push(current);
-      }
+    // Normalize the container (merge adjacent text nodes)
+    editableRef.current.normalize();
+    
+    // Set cursor position
+    const range = document.createRange();
+    const selection = window.getSelection();
+    
+    try {
+      // After normalize(), targetNode might have been merged, so clamp offset
+      const maxOffset = targetNode.textContent?.length || 0;
+      range.setStart(targetNode, Math.min(targetOffset, maxOffset));
+      range.collapse(true);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    } catch (e) {
+      // Fallback: focus the container
+      editableRef.current.focus();
     }
     
-    // If no segments or only empty text, add a text segment
-    if (consolidatedSegments.length === 0 || (consolidatedSegments.length === 1 && consolidatedSegments[0].type === 'text' && consolidatedSegments[0].content === '')) {
-      consolidatedSegments.length = 0;
-      consolidatedSegments.push({ type: 'text', content: '' });
-      targetSegmentIndex = 0;
-      targetOffset = 0;
-    }
-    
-    // Adjust target index if chip was before target
-    if (chipIndex < targetSegmentIndex) {
-      targetSegmentIndex--;
-    }
-    
-    pendingCursorPositionRef.current = { segmentIndex: targetSegmentIndex, offset: targetOffset };
-    setSegments(consolidatedSegments);
+    // Trigger input event to sync segments with DOM
+    const event = new Event('input', { bubbles: true });
+    editableRef.current.dispatchEvent(event);
   };
 
   const insertVariable = (variable: string) => {
@@ -1176,12 +1477,69 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
       range.collapse(false); // Collapse to end
     }
 
+    // Delete any selected content first
+    range.deleteContents();
+    
+    // Check context for spacing: is previous sibling a chip or are we at start of line?
+    // Find the insertion point's parent and check its children
+    const parent = range.startContainer.parentNode || editableRef.current;
+    let prevSibling: Node | null = null;
+    
+    if (parent) {
+      const children = Array.from(parent.childNodes);
+      let insertIndex = -1;
+      
+      // Find where we're inserting
+      if (range.startContainer.nodeType === Node.TEXT_NODE) {
+        insertIndex = children.indexOf(range.startContainer);
+        // If inserting at start of text node, check previous sibling
+        if (range.startOffset === 0 && insertIndex > 0) {
+          prevSibling = children[insertIndex - 1];
+        } else if (insertIndex > 0) {
+          // Check if previous sibling exists
+          prevSibling = children[insertIndex - 1];
+        }
+      } else {
+        insertIndex = children.indexOf(range.startContainer);
+        if (insertIndex > 0) {
+          prevSibling = children[insertIndex - 1];
+        }
+      }
+      
+      // If no previous sibling found, we're at the start
+      if (insertIndex === 0 || !prevSibling) {
+        prevSibling = null;
+      }
+    }
+    
+    // Check if previous sibling is a chip
+    const prevIsChip = prevSibling && 
+      prevSibling.nodeType === Node.ELEMENT_NODE && 
+      (prevSibling as HTMLElement).hasAttribute('data-chip-id');
+    
+    // Check if at start of line (previous text ends with newline, or no previous sibling, or previous is BR/div)
+    let atStartOfLine = false;
+    if (!prevSibling) {
+      atStartOfLine = true;
+    } else if (prevSibling.nodeType === Node.TEXT_NODE) {
+      const text = prevSibling.textContent || '';
+      atStartOfLine = text.endsWith('\n');
+    } else if (prevSibling.nodeName === 'BR' || 
+               (prevSibling.nodeType === Node.ELEMENT_NODE && 
+                (prevSibling as HTMLElement).tagName === 'DIV')) {
+      atStartOfLine = true;
+    }
+    
+    // Set margins based on context
+    const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[4px]';
+    const mr = 'mr-[4px]';
+
     const chipId = `chip-${Date.now()}-${Math.random()}`;
     const colors = getChipColor(variable);
 
     // Create the chip element with new style
     const chipSpan = document.createElement('span');
-    chipSpan.className = 'inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+    chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${ml} ${mr} my-[1.5px] whitespace-nowrap relative`;
     chipSpan.style.backgroundColor = colors.bg;
     chipSpan.style.color = colors.text;
     chipSpan.contentEditable = 'false';
@@ -1194,38 +1552,34 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     textSpan.textContent = variable;
 
     const button = document.createElement('button');
-    button.className = 'rounded-full p-[2px]';
+    button.className = 'rounded-full p-[2px] cursor-pointer';
     button.style.color = colors.text;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     button.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      // Trigger a re-sync
-      const event = new Event('input', { bubbles: true });
-      editableRef.current?.dispatchEvent(event);
+      handleRemoveChip(chipId);
     };
     
     chipSpan.appendChild(textSpan);
     chipSpan.appendChild(button);
-
-    // Delete any selected content
-    range.deleteContents();
     
     // Insert the chip
     range.insertNode(chipSpan);
     
-    // Insert a zero-width space after the chip
-    const textNode = document.createTextNode('\u200B');
+    // Position cursor directly after the chip (no extra characters needed)
     range.setStartAfter(chipSpan);
     range.collapse(true);
-    range.insertNode(textNode);
 
-    // Update selection to position after the inserted content
+    // Update selection to position after the chip
     selection?.removeAllRanges();
     selection?.addRange(range);
 
     // Mark that we want cursor after this chip
     pendingCursorAfterChipRef.current = chipId;
+
+    // Ensure focus is maintained before triggering input event
+    editableRef.current.focus();
 
     // Trigger input event to sync segments
     const event = new Event('input', { bubbles: true });
@@ -1372,7 +1726,7 @@ function MainContent() {
   };
 
   return (
-    <div style={{ gridColumn: 'span 6' }}>
+    <div style={{ gridColumn: 'span 5' }}>
       <div className="bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start p-[24px] rounded-[4px] w-full">
         <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
           Invitation Settings
@@ -1395,15 +1749,15 @@ export default function InvitationSettingsCoach() {
       {/* Main content area with 12-column grid */}
       <div style={{ flex: 1, padding: '24px 24px 0 24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '24px' }}>
-          {/* Sidebar - 3 columns */}
+          {/* Sidebar - 2 columns */}
           <Sidebar />
 
-          {/* Main content - 9 columns */}
+          {/* Main content - 5 columns */}
           <MainContent />
         </div>
       </div>
 
-      <Toaster />
+      <Toaster position="bottom-left" />
     </div>
   );
 }
