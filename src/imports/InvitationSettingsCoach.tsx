@@ -500,7 +500,22 @@ interface TextSegment {
   type: 'text' | 'chip';
   content: string;
   id?: string;
+  color?: string;
 }
+
+// Tailwind-based color schemes for chips
+const chipColors: Record<string, { bg: string; text: string; border: string }> = {
+  "Client's first name": { bg: '#132e1c', text: '#4ade80', border: '#4ade80' },    // green
+  "Client's full name": { bg: '#1e1b4b', text: '#a5b4fc', border: '#a5b4fc' },     // indigo
+  "Coach's first name": { bg: '#3b1c32', text: '#f472b6', border: '#f472b6' },     // pink
+  "Coach's full name": { bg: '#1e3a5f', text: '#38bdf8', border: '#38bdf8' },      // sky
+  "Organization name": { bg: '#422006', text: '#fbbf24', border: '#fbbf24' },      // amber
+  "Coach booking link": { bg: '#2d1f3d', text: '#c084fc', border: '#c084fc' },     // purple
+};
+
+const getChipColor = (content: string) => {
+  return chipColors[content] || { bg: '#032e15', text: '#05df72', border: '#05df72' };
+};
 
 function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCursorChange, containerRef: externalRef, onUndo, onRedo }: { 
   segments: TextSegment[]; 
@@ -594,26 +609,30 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
 
     segments.forEach((segment) => {
       if (segment.type === 'chip') {
+        const colors = getChipColor(segment.content);
         const chipSpan = document.createElement('span');
-        chipSpan.className = 'inline-flex items-center gap-[2px] bg-[#032e15] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[#05df72] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+        chipSpan.className = 'inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+        chipSpan.style.backgroundColor = colors.bg;
+        chipSpan.style.color = colors.text;
         chipSpan.contentEditable = 'false';
         chipSpan.setAttribute('data-chip-id', segment.id!);
-        chipSpan.style.border = '1px solid #05df72';
-        
+        chipSpan.style.border = `1px solid ${colors.border}`;
+
         const textSpan = document.createElement('span');
         textSpan.className = "font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic";
         textSpan.style.fontVariationSettings = "'wdth' 100";
         textSpan.textContent = segment.content;
-        
+
         const button = document.createElement('button');
-        button.className = 'rounded-full p-[2px] text-[#05df72]';
+        button.className = 'rounded-full p-[2px]';
+        button.style.color = colors.text;
         button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
         button.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
           handleRemoveChip(segment.id!);
         };
-        
+
         chipSpan.appendChild(textSpan);
         chipSpan.appendChild(button);
         container.appendChild(chipSpan);
@@ -1158,21 +1177,25 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     }
 
     const chipId = `chip-${Date.now()}-${Math.random()}`;
-    
+    const colors = getChipColor(variable);
+
     // Create the chip element with new style
     const chipSpan = document.createElement('span');
-    chipSpan.className = 'inline-flex items-center gap-[2px] bg-[#032e15] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[#05df72] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+    chipSpan.className = 'inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ml-[4px] mr-[4px] my-[1.5px] whitespace-nowrap relative';
+    chipSpan.style.backgroundColor = colors.bg;
+    chipSpan.style.color = colors.text;
     chipSpan.contentEditable = 'false';
     chipSpan.setAttribute('data-chip-id', chipId);
-    chipSpan.style.border = '1px solid #05df72';
-    
+    chipSpan.style.border = `1px solid ${colors.border}`;
+
     const textSpan = document.createElement('span');
     textSpan.className = "font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic";
     textSpan.style.fontVariationSettings = "'wdth' 100";
     textSpan.textContent = variable;
-    
+
     const button = document.createElement('button');
-    button.className = 'rounded-full p-[2px] text-[#05df72]';
+    button.className = 'rounded-full p-[2px]';
+    button.style.color = colors.text;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     button.onclick = (e) => {
       e.preventDefault();
@@ -1245,20 +1268,23 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
                     <p className="leading-none">Personalize</p>
                   </div>
                   <div className="content-start flex flex-wrap gap-x-[6px] gap-y-[5px] items-start relative shrink-0 w-full">
-                    {variables.map((variable) => (
-                      <button
-                        key={variable}
-                        onMouseDown={(e) => {
-                          // Prevent blur when clicking the chip
-                          e.preventDefault();
-                        }}
-                        onClick={() => insertVariable(variable)}
-                        className="bg-[#032e15] relative inline-flex items-center rounded-[6px] px-[6px] py-[2px] text-[#05df72] text-[12px] cursor-pointer hover:bg-[#043a19] transition-colors"
-                        style={{ border: '1px solid #05df72' }}
-                      >
-                        <span className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>{variable}</span>
-                      </button>
-                    ))}
+                    {variables.map((variable) => {
+                      const colors = getChipColor(variable);
+                      return (
+                        <button
+                          key={variable}
+                          onMouseDown={(e) => {
+                            // Prevent blur when clicking the chip
+                            e.preventDefault();
+                          }}
+                          onClick={() => insertVariable(variable)}
+                          className="relative inline-flex items-center rounded-[6px] px-[6px] py-[2px] text-[12px] cursor-pointer transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
+                        >
+                          <span className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>{variable}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1301,7 +1327,8 @@ function Button3() {
 
 function Button4({ onClick }: { onClick: () => void }) {
   return (
-    <button 
+    <button
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className="bg-[#3db2e0] content-stretch flex items-center justify-center p-[10px] relative rounded-[8px] shrink-0 cursor-pointer"
       data-name="Button"
@@ -1337,6 +1364,8 @@ function MainContent() {
         background: '#22c55e',
         color: 'white',
         border: 'none',
+        width: 'auto',
+        minWidth: 'unset',
       },
       position: 'bottom-left',
     });
