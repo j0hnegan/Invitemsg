@@ -473,13 +473,15 @@ function Frame3() {
   );
 }
 
-function Frame21() {
+function Sidebar() {
   return (
-    <div className="absolute bg-[#27272a] content-stretch flex gap-[10px] items-center left-[24px] overflow-clip px-[10px] py-[11px] rounded-[6px] top-[96px] w-[212px]">
-      <Frame3 />
-      <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
-        Invitation Settings
-      </p>
+    <div className="col-span-3">
+      <div className="bg-[#27272a] content-stretch flex gap-[10px] items-center overflow-clip px-[10px] py-[11px] rounded-[6px] w-full">
+        <Frame3 />
+        <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
+          Invitation Settings
+        </p>
+      </div>
     </div>
   );
 }
@@ -1320,7 +1322,7 @@ function ButtonGroup({ onSave }: { onSave: () => void }) {
   );
 }
 
-function Frame22() {
+function MainContent() {
   const [segments, setSegments] = useState<TextSegment[]>([
     { type: 'text', content: "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." }
   ]);
@@ -1341,30 +1343,37 @@ function Frame22() {
   };
 
   return (
-    <div className="absolute bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start left-[260px] p-[24px] rounded-[4px] top-[96px] w-[564px]">
-      <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px] w-[427px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        Invitation Settings
-      </p>
-      <Frame23 segments={segments} setSegments={setSegments} savedSegments={savedSegments} />
-      <ButtonGroup onSave={handleSave} />
+    <div className="col-span-6">
+      <div className="bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start p-[24px] rounded-[4px] w-full">
+        <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
+          Invitation Settings
+        </p>
+        <Frame23 segments={segments} setSegments={setSegments} savedSegments={savedSegments} />
+        <ButtonGroup onSave={handleSave} />
+      </div>
     </div>
   );
 }
 
 export default function InvitationSettingsCoach() {
   return (
-    <div className="bg-[#171719] relative size-full" data-name="Invitation Settings - Coach">
-      <div className="absolute h-0 left-[31px] top-[-121px] w-[1121px]">
-        <div className="absolute inset-[-1px_0_0_0]">
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 1121 1">
-            <line id="Line 13" stroke="var(--stroke-0, #2C2C2C)" x2="1121" y1="0.5" y2="0.5" />
-          </svg>
+    <div className="bg-[#171719] min-h-screen flex flex-col" data-name="Invitation Settings - Coach">
+      {/* Nav - Full width (12 columns) */}
+      <nav className="w-full px-[24px] py-[11px]">
+        <HeaderNav />
+      </nav>
+
+      {/* Main content area with 12-column grid */}
+      <div className="flex-1 px-[24px] pt-[24px]">
+        <div className="grid grid-cols-12 gap-[24px]">
+          {/* Sidebar - 3 columns */}
+          <Sidebar />
+
+          {/* Main content - 6 columns */}
+          <MainContent />
         </div>
       </div>
-      <Tasks />
-      <NavMain />
-      <Frame21 />
-      <Frame22 />
+
       <Toaster />
     </div>
   );
