@@ -335,12 +335,13 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
         const colors = getChipColor(segment.content);
         const margins = getChipMargins(index, segments);
         const chipSpan = document.createElement('span');
-        chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${margins.ml} ${margins.mr} my-[1.5px] whitespace-nowrap relative`;
+        chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${margins.ml} ${margins.mr} whitespace-nowrap relative`;
         chipSpan.style.backgroundColor = colors.bg;
         chipSpan.style.color = colors.text;
         chipSpan.contentEditable = 'false';
         chipSpan.setAttribute('data-chip-id', segment.id!);
         chipSpan.style.border = `1px solid ${colors.border}`;
+        chipSpan.style.verticalAlign = 'baseline';
 
         const textSpan = document.createElement('span');
         textSpan.className = "font-medium leading-[1.43] not-italic";
