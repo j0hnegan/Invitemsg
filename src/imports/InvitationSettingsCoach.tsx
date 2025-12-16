@@ -1,459 +1,11 @@
 import svgPaths from "./svg-12qi7k655n";
-import imgEllipse32 from "../assets/e26d77c3d6ca4aa4ac07a856b5ce37cfddb76ece.png";
-import imgFrame824 from "../assets/caeeddc62ff6b56dd620c8c68abc11c54b02c3a7.png";
-import imgCoachRxWhite6855787D72E0Da9E54266727C85E549A1 from "../assets/8988f58f3d77ccefb92f92d04b4880d9a969c424.png";
 import { useState, useRef, useEffect } from "react";
-import { toast, Toaster } from "sonner@2.0.3";
-import { X } from "lucide-react";
+import { toast, Toaster } from "sonner";
+import { HeaderNav } from "../components/navigation/HeaderNav";
 
-function Button() {
-  return (
-    <div className="content-stretch flex h-[28px] items-center justify-center p-[12px] relative rounded-[40.317px] shrink-0" data-name="Button">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-nowrap text-white tracking-[-0.28px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.33]">Add Task</p>
-      </div>
-    </div>
-  );
-}
+// Settings icon for sidebar
 
-function Button1() {
-  return (
-    <div className="content-stretch flex h-[28px] items-center justify-center p-[12px] relative rounded-[40.317px] shrink-0" data-name="Button">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-nowrap text-white tracking-[-0.28px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.33]">See all</p>
-      </div>
-    </div>
-  );
-}
 
-function Button2() {
-  return (
-    <div className="content-stretch flex h-[28px] items-center justify-center p-[12px] relative rounded-[40.317px] shrink-0" data-name="Button">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-nowrap text-white tracking-[-0.28px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.33]">View completed</p>
-      </div>
-    </div>
-  );
-}
-
-function Frame8() {
-  return (
-    <div className="content-stretch flex gap-[8px] items-start relative shrink-0">
-      <Button />
-      <Button1 />
-      <Button2 />
-    </div>
-  );
-}
-
-function Frame12() {
-  return (
-    <div className="content-stretch flex items-center justify-between relative shrink-0 w-full">
-      <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-nowrap text-white tracking-[-0.96px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        Tasks
-      </p>
-      <Frame8 />
-    </div>
-  );
-}
-
-function Bullet() {
-  return (
-    <div className="content-stretch flex flex-col items-start relative self-stretch shrink-0" data-name="Bullet">
-      <div className="relative shrink-0 size-[24px]">
-        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" fill="var(--fill-0, #2D2D2D)" id="Ellipse 13" r="11.5" stroke="var(--stroke-0, #939393)" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function Frame9() {
-  return (
-    <div className="content-stretch flex flex-col gap-[18.936px] items-center relative shrink-0">
-      <div className="relative shrink-0 size-[24px]">
-        <img alt="" className="block max-w-none size-full" height="24" src={imgEllipse32} width="24" />
-      </div>
-    </div>
-  );
-}
-
-function Frame13() {
-  return (
-    <div className="basis-0 content-stretch flex grow items-center justify-center min-h-px min-w-px pb-[2px] pt-0 px-0 relative shrink-0">
-      <div className="basis-0 flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal grow justify-center leading-[0] min-h-px min-w-px not-italic overflow-ellipsis overflow-hidden relative shrink-0 text-[#c4c4c4] text-[14px] text-nowrap tracking-[-0.28px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.33] overflow-ellipsis overflow-hidden">Mike Franelli</p>
-      </div>
-    </div>
-  );
-}
-
-function Client() {
-  return (
-    <div className="basis-0 content-stretch flex gap-[4px] grow items-center min-h-px min-w-px relative rounded-[1000px] shrink-0" data-name="Client">
-      <Frame9 />
-      <Frame13 />
-    </div>
-  );
-}
-
-function Frame16() {
-  return (
-    <div className="content-center flex flex-wrap gap-[16px] items-center pb-0 pt-[8px] px-0 relative shrink-0 w-full">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#5aa8de] text-[0px] text-nowrap" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43] text-[14px]">
-          <span className="font-['Mona_Sans:Bold',sans-serif] font-bold not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>
-            Due
-          </span>
-          <span>{` : Mon, April 24`}</span>
-        </p>
-      </div>
-      <Client />
-    </div>
-  );
-}
-
-function TaskContent() {
-  return (
-    <div className="basis-0 content-stretch flex flex-col gap-[4px] grow items-start min-h-px min-w-px relative shrink-0" data-name="Task Content">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[18px] text-white tracking-[-0.36px] w-full" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.07]">Respond to Sammie Reedsport’ direct message</p>
-      </div>
-      <Frame16 />
-    </div>
-  );
-}
-
-function TaskHorizontal() {
-  return (
-    <div className="content-stretch flex gap-[16px] items-start relative shrink-0 w-[415px]" data-name="Task (horizontal)">
-      <Bullet />
-      <TaskContent />
-    </div>
-  );
-}
-
-function Bullet1() {
-  return (
-    <div className="content-stretch flex flex-col items-start relative self-stretch shrink-0" data-name="Bullet">
-      <div className="relative shrink-0 size-[24px]">
-        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" fill="var(--fill-0, #2D2D2D)" id="Ellipse 13" r="11.5" stroke="var(--stroke-0, #939393)" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function Frame10() {
-  return (
-    <div className="content-stretch flex flex-col gap-[18.936px] items-center relative shrink-0">
-      <div className="relative shrink-0 size-[24px]">
-        <img alt="" className="block max-w-none size-full" height="24" src={imgEllipse32} width="24" />
-      </div>
-    </div>
-  );
-}
-
-function Frame14() {
-  return (
-    <div className="basis-0 content-stretch flex grow items-center justify-center min-h-px min-w-px pb-[2px] pt-0 px-0 relative shrink-0">
-      <div className="basis-0 flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal grow justify-center leading-[0] min-h-px min-w-px not-italic overflow-ellipsis overflow-hidden relative shrink-0 text-[#c4c4c4] text-[14px] text-nowrap tracking-[-0.28px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.33] overflow-ellipsis overflow-hidden">Mike Franelli</p>
-      </div>
-    </div>
-  );
-}
-
-function Client1() {
-  return (
-    <div className="basis-0 content-stretch flex gap-[4px] grow items-center min-h-px min-w-px relative rounded-[1000px] shrink-0" data-name="Client">
-      <Frame10 />
-      <Frame14 />
-    </div>
-  );
-}
-
-function Frame17() {
-  return (
-    <div className="content-center flex flex-wrap gap-[16px] items-center pb-0 pt-[8px] px-0 relative shrink-0 w-full">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#5aa8de] text-[0px] text-nowrap" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43] text-[14px]">
-          <span className="font-['Mona_Sans:Bold',sans-serif] font-bold not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>
-            Due
-          </span>
-          <span>{` : Mon, April 24`}</span>
-        </p>
-      </div>
-      <Client1 />
-    </div>
-  );
-}
-
-function TaskContent1() {
-  return (
-    <div className="basis-0 content-stretch flex flex-col gap-[4px] grow items-start min-h-px min-w-px relative shrink-0" data-name="Task Content">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[18px] text-white tracking-[-0.36px] w-full" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.07]">Consult overdue with Taylor Tiumi; schedule today</p>
-      </div>
-      <Frame17 />
-    </div>
-  );
-}
-
-function TaskHorizontal1() {
-  return (
-    <div className="content-stretch flex gap-[16px] items-start relative shrink-0 w-[415px]" data-name="Task (horizontal)">
-      <Bullet1 />
-      <TaskContent1 />
-    </div>
-  );
-}
-
-function Bullet2() {
-  return (
-    <div className="content-stretch flex flex-col items-start relative self-stretch shrink-0" data-name="Bullet">
-      <div className="relative shrink-0 size-[24px]">
-        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" fill="var(--fill-0, #2D2D2D)" id="Ellipse 13" r="11.5" stroke="var(--stroke-0, #939393)" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function Frame11() {
-  return (
-    <div className="content-stretch flex flex-col gap-[18.936px] items-center relative shrink-0">
-      <div className="relative shrink-0 size-[24px]">
-        <img alt="" className="block max-w-none size-full" height="24" src={imgEllipse32} width="24" />
-      </div>
-    </div>
-  );
-}
-
-function Frame15() {
-  return (
-    <div className="basis-0 content-stretch flex grow items-center justify-center min-h-px min-w-px pb-[2px] pt-0 px-0 relative shrink-0">
-      <div className="basis-0 flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal grow justify-center leading-[0] min-h-px min-w-px not-italic overflow-ellipsis overflow-hidden relative shrink-0 text-[#c4c4c4] text-[14px] text-nowrap tracking-[-0.28px]" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.33] overflow-ellipsis overflow-hidden">Mike Franelli</p>
-      </div>
-    </div>
-  );
-}
-
-function Client2() {
-  return (
-    <div className="basis-0 content-stretch flex gap-[4px] grow items-center min-h-px min-w-px relative rounded-[1000px] shrink-0" data-name="Client">
-      <Frame11 />
-      <Frame15 />
-    </div>
-  );
-}
-
-function Frame18() {
-  return (
-    <div className="content-center flex flex-wrap gap-[16px] items-center pb-0 pt-[8px] px-0 relative shrink-0 w-full">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#5aa8de] text-[0px] text-nowrap" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43] text-[14px]">
-          <span className="font-['Mona_Sans:Bold',sans-serif] font-bold not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>
-            Due
-          </span>
-          <span>{` : Mon, April 24`}</span>
-        </p>
-      </div>
-      <Client2 />
-    </div>
-  );
-}
-
-function TaskContent2() {
-  return (
-    <div className="basis-0 content-stretch flex flex-col gap-[4px] grow items-start min-h-px min-w-px relative shrink-0" data-name="Task Content">
-      <div className="flex flex-col font-['Mona_Sans:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[18px] text-white tracking-[-0.36px] w-full" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.07]">Lauren Singer has an outstanding invoice that needs to be paid</p>
-      </div>
-      <Frame18 />
-    </div>
-  );
-}
-
-function TaskHorizontal2() {
-  return (
-    <div className="content-stretch flex gap-[16px] items-start relative shrink-0 w-[415px]" data-name="Task (horizontal)">
-      <Bullet2 />
-      <TaskContent2 />
-    </div>
-  );
-}
-
-function Frame7() {
-  return (
-    <div className="content-stretch flex gap-[32px] items-start overflow-clip relative shrink-0 w-full">
-      <TaskHorizontal />
-      <TaskHorizontal1 />
-      <TaskHorizontal2 />
-    </div>
-  );
-}
-
-function Tasks() {
-  return (
-    <div className="absolute content-stretch flex flex-col gap-[37px] items-start left-[32px] top-[-343px] w-[1119px]" data-name="Tasks">
-      <Frame12 />
-      <Frame7 />
-    </div>
-  );
-}
-
-function NavItem() {
-  return (
-    <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="nav-item">
-      <div className="flex flex-col font-['Mona_Sans:Bold',sans-serif] font-bold justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-nowrap text-white uppercase" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43]">Dashboard</p>
-      </div>
-    </div>
-  );
-}
-
-function NavItem1() {
-  return (
-    <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="nav-item">
-      <div className="flex flex-col font-['Mona_Sans:Bold',sans-serif] font-bold justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-[rgba(255,255,255,0.6)] text-nowrap uppercase" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43]">Clients</p>
-      </div>
-    </div>
-  );
-}
-
-function NavItem2() {
-  return (
-    <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="nav-item">
-      <div className="flex flex-col font-['Mona_Sans:Bold',sans-serif] font-bold justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-[rgba(255,255,255,0.6)] text-nowrap uppercase" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43]">Index</p>
-      </div>
-    </div>
-  );
-}
-
-function NavItem3() {
-  return (
-    <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="nav-item">
-      <div className="flex flex-col font-['Mona_Sans:Bold',sans-serif] font-bold justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-[rgba(255,255,255,0.6)] text-nowrap uppercase" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43]">Coaches</p>
-      </div>
-    </div>
-  );
-}
-
-function NavItem4() {
-  return (
-    <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="nav-item">
-      <div className="flex flex-col font-['Mona_Sans:Bold',sans-serif] font-bold justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-[rgba(255,255,255,0.6)] text-nowrap uppercase" style={{ fontVariationSettings: "'wdth' 100" }}>
-        <p className="leading-[1.43]">Programs</p>
-      </div>
-    </div>
-  );
-}
-
-function NavMenu() {
-  return (
-    <div className="content-stretch flex gap-[40px] items-center relative shrink-0" data-name="nav-menu">
-      <NavItem />
-      <NavItem1 />
-      <NavItem2 />
-      <NavItem3 />
-      <NavItem4 />
-    </div>
-  );
-}
-
-function Frame() {
-  return (
-    <div className="relative shrink-0 size-[24px]" data-name="Frame">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-        <g id="Frame">
-          <path d={svgPaths.p3f28ba80} id="Vector" stroke="var(--stroke-0, white)" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7" strokeWidth="1.5" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-function Frame1() {
-  return (
-    <div className="relative shrink-0 size-[24px]" data-name="Frame">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-        <g id="Frame">
-          <path d={svgPaths.p3964c80} id="Vector" stroke="var(--stroke-0, white)" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7" strokeWidth="1.5" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-function Frame20() {
-  return (
-    <div className="relative rounded-[60px] shrink-0 size-[24px]">
-      <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[60px] size-full" src={imgFrame824} />
-    </div>
-  );
-}
-
-function Frame2() {
-  return (
-    <div className="relative shrink-0 size-[16px]" data-name="Frame">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 16 16">
-        <g id="Frame">
-          <path d="M13 5.5L8 10.5L3 5.5" id="Vector" stroke="var(--stroke-0, white)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-function Frame19() {
-  return (
-    <div className="relative rounded-[8px] shrink-0">
-      <div className="content-stretch flex gap-[16px] items-center overflow-clip p-[6px] relative rounded-[inherit]">
-        <Frame20 />
-        <Frame2 />
-      </div>
-      <div aria-hidden="true" className="absolute border border-[rgba(255,255,255,0.3)] border-solid inset-0 pointer-events-none rounded-[8px]" />
-    </div>
-  );
-}
-
-function NavRight() {
-  return (
-    <div className="content-stretch flex gap-[16px] items-center relative shrink-0" data-name="nav-right">
-      <Frame />
-      <Frame1 />
-      <Frame19 />
-    </div>
-  );
-}
-
-function HeaderNav() {
-  return (
-    <div className="content-stretch flex h-[58px] items-center justify-between relative shrink-0 w-full" data-name="Header Nav">
-      <div className="h-[28px] relative shrink-0 w-[110px]" data-name="CoachRx_White-6855787d72e0da9e54266727c85e549a 1">
-        <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none size-full" src={imgCoachRxWhite6855787D72E0Da9E54266727C85E549A1} />
-      </div>
-      <NavMenu />
-      <NavRight />
-    </div>
-  );
-}
-
-function NavMain() {
-  return (
-    <div className="absolute content-stretch flex flex-col items-start left-0 right-0 px-[24px] py-[11px] top-0" data-name="nav-main">
-      <HeaderNav />
-    </div>
-  );
-}
 
 function Frame3() {
   return (
@@ -478,7 +30,7 @@ function Sidebar() {
     <div style={{ gridColumn: 'span 2' }}>
       <div className="bg-[#27272a] content-stretch flex gap-[10px] items-center overflow-clip px-[10px] py-[11px] rounded-[6px] w-full">
         <Frame3 />
-        <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
+        <p className="font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
           Invitation Settings
         </p>
       </div>
@@ -489,7 +41,7 @@ function Sidebar() {
 function Frame5() {
   return (
     <div className="content-stretch flex items-start opacity-70 relative shrink-0 w-full">
-      <div className="basis-0 flex flex-col font-['Mona_Sans:Medium',sans-serif] font-medium grow justify-center leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[16px] text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
+      <div className="basis-0 flex flex-col font-medium grow justify-center leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[16px] text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
         <p className="leading-[1.35]">Custom welcome message</p>
       </div>
     </div>
@@ -517,7 +69,7 @@ const getChipColor = (content: string) => {
   return chipColors[content] || { bg: '#032e15', text: '#05df72', border: '#05df72' };
 };
 
-function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCursorChange, containerRef: externalRef, onUndo, onRedo }: { 
+function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCursorChange, containerRef: externalRef, onUndo, onRedo, onSlashCommand, slashMenuOpen, onSlashSelect, selectedSlashIndex }: { 
   segments: TextSegment[]; 
   onSegmentsChange: (segments: TextSegment[]) => void; 
   isFocused: boolean; 
@@ -527,8 +79,94 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
   containerRef?: React.RefObject<HTMLDivElement>;
   onUndo?: () => void;
   onRedo?: () => void;
+  onSlashCommand?: (query: string | null, position: { top: number; left: number } | null) => void;
+  slashMenuOpen?: boolean;
+  onSlashSelect?: () => void;
+  selectedSlashIndex?: number;
 }) {
   const containerRef = externalRef || useRef<HTMLDivElement>(null);
+  const slashStartRef = useRef<number | null>(null);
+
+  // Helper to get current cursor character offset in the text content
+  const getCursorCharOffset = (): number => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !containerRef.current) return 0;
+    
+    const range = selection.getRangeAt(0);
+    let charOffset = 0;
+    
+    const walkNodes = (node: Node): boolean => {
+      if (node === range.startContainer) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          charOffset += range.startOffset;
+        }
+        return true;
+      }
+      
+      if (node.nodeType === Node.TEXT_NODE) {
+        charOffset += node.textContent?.length || 0;
+        return false;
+      }
+      
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        if (element.hasAttribute('data-chip-id')) {
+          return false; // Skip chips
+        }
+        for (let i = 0; i < node.childNodes.length; i++) {
+          if (walkNodes(node.childNodes[i])) return true;
+        }
+      }
+      return false;
+    };
+    
+    for (let i = 0; i < containerRef.current.childNodes.length; i++) {
+      if (walkNodes(containerRef.current.childNodes[i])) break;
+    }
+    
+    return charOffset;
+  };
+
+  // Helper to get text content up to cursor (excluding chips)
+  const getTextUpToCursor = (): string => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !containerRef.current) return '';
+    
+    const range = selection.getRangeAt(0);
+    let text = '';
+    let done = false;
+    
+    const walkNodes = (node: Node) => {
+      if (done) return;
+      
+      if (node === range.startContainer) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += (node.textContent || '').substring(0, range.startOffset);
+        }
+        done = true;
+        return;
+      }
+      
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += node.textContent || '';
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        if (!element.hasAttribute('data-chip-id')) {
+          for (let i = 0; i < node.childNodes.length; i++) {
+            walkNodes(node.childNodes[i]);
+            if (done) return;
+          }
+        }
+      }
+    };
+    
+    for (let i = 0; i < containerRef.current.childNodes.length; i++) {
+      walkNodes(containerRef.current.childNodes[i]);
+      if (done) break;
+    }
+    
+    return text;
+  };
   const isRemovingChipRef = useRef(false);
   const cursorRestoreRef = useRef<{ node: Node; offset: number } | null>(null);
   const shouldPreserveCursorRef = useRef(false);
@@ -705,7 +343,7 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
         chipSpan.style.border = `1px solid ${colors.border}`;
 
         const textSpan = document.createElement('span');
-        textSpan.className = "font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic";
+        textSpan.className = "font-medium leading-[1.43] not-italic";
         textSpan.style.fontVariationSettings = "'wdth' 100";
         textSpan.textContent = segment.content;
 
@@ -906,7 +544,7 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     if (!containerRef.current) return;
 
     const container = containerRef.current;
-    const newSegments: TextSegment[] = [];
+    let newSegments: TextSegment[] = [];
     
     // Helper function to recursively extract text and chips
     const sanitizeText = (text: string) =>
@@ -1065,9 +703,71 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     }
 
     onSegmentsChange(newSegments);
+    
+    // Update slash command query if menu is open
+    if (slashStartRef.current !== null && onSlashCommand) {
+      const textUpToCursor = getTextUpToCursor();
+      const slashIndex = textUpToCursor.lastIndexOf('/');
+      
+      if (slashIndex >= 0) {
+        const query = textUpToCursor.substring(slashIndex + 1);
+        // Check if query is still valid (no spaces)
+        if (!query.includes(' ') && !query.includes('\n')) {
+          const pos = getCursorPosition();
+          if (pos) {
+            onSlashCommand(query, pos);
+          }
+        } else {
+          // Space or newline found, close menu
+          slashStartRef.current = null;
+          onSlashCommand(null, null);
+        }
+      } else {
+        // Slash was deleted, close menu
+        slashStartRef.current = null;
+        onSlashCommand(null, null);
+      }
+    }
+  };
+
+  // Helper to get cursor position for dropdown placement
+  const getCursorPosition = (): { top: number; left: number } | null => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+    
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    
+    if (!containerRect) return null;
+    
+    return {
+      top: rect.top - containerRect.top,
+      left: rect.left - containerRect.left
+    };
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle slash menu navigation
+    if (slashMenuOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        // Navigation handled by parent
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        onSlashSelect?.();
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        slashStartRef.current = null;
+        onSlashCommand?.(null, null);
+        return;
+      }
+    }
+
     // Handle Undo (Ctrl+Z / Cmd+Z)
     if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
@@ -1121,8 +821,25 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       return;
     }
 
+    // Detect forward slash to open slash menu
+    if (e.key === '/') {
+      // Get cursor position for dropdown
+      setTimeout(() => {
+        const pos = getCursorPosition();
+        if (pos) {
+          slashStartRef.current = getCursorCharOffset();
+          onSlashCommand?.('', pos);
+        }
+      }, 0);
+    }
+
     // Handle Enter key - let browser create the line break, then sync
     if (e.key === 'Enter') {
+      // Close slash menu if open
+      if (slashMenuOpen) {
+        return; // Already handled above
+      }
+      
       // Don't prevent default - let browser handle the line break naturally
       // The browser will insert a <br> or create a new line
       // We'll sync segments after, but won't rebuild DOM to preserve cursor position
@@ -1155,26 +872,71 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       return;
     }
 
+    // Close slash menu on space or certain punctuation
+    if (slashMenuOpen && (e.key === ' ' || e.key === 'Escape')) {
+      slashStartRef.current = null;
+      onSlashCommand?.(null, null);
+    }
+
     if (e.key === 'Backspace') {
       const selection = window.getSelection();
       if (!selection || !containerRef.current || selection.rangeCount === 0) return;
 
       const range = selection.getRangeAt(0);
-      if (range.collapsed && range.startOffset === 0) {
-        // Check if previous sibling is a chip
+      if (range.collapsed) {
         const node = range.startContainer;
-        let previousNode = node.previousSibling;
+        let previousNode: Node | null = null;
         
-        if (!previousNode && node.parentNode !== containerRef.current) {
-          previousNode = node.parentNode?.previousSibling || null;
+        // Check if cursor is positioned right after an element (chip)
+        if (range.startOffset === 0 && node.nodeType === Node.TEXT_NODE) {
+          previousNode = node.previousSibling;
+        } else if (node.nodeType === Node.ELEMENT_NODE && range.startOffset === 0) {
+          // Cursor is at the start of an element, check if it's right after a chip
+          previousNode = (node as Element).previousElementSibling;
         }
-
+        
+        // Also check parent's previous sibling if we're in a nested structure
+        if (!previousNode && node.parentNode && node.parentNode !== containerRef.current) {
+          previousNode = node.parentNode.previousSibling;
+        }
+        
+        // If previous node is a chip, delete it
         if (previousNode && previousNode.nodeType === Node.ELEMENT_NODE) {
           const element = previousNode as HTMLElement;
           const chipId = element.getAttribute('data-chip-id');
           if (chipId) {
             e.preventDefault();
             handleRemoveChip(chipId);
+            return;
+          }
+        }
+        
+        // Also check if we're in a text node at offset 0 or 1 with just whitespace/hair-space/zero-width
+        if (node.nodeType === Node.TEXT_NODE) {
+          const textContent = node.textContent || '';
+          // Check for hair space (U+200A), regular space, or zero-width characters
+          if ((range.startOffset === 0 || range.startOffset === 1) && 
+              (textContent.trim() === '' || /^[\u200A\u200B-\u200D\uFEFF\s]*$/.test(textContent))) {
+            if (!previousNode) {
+              previousNode = node.previousSibling;
+            }
+            if (!previousNode && node.parentNode !== containerRef.current) {
+              previousNode = node.parentNode?.previousSibling || null;
+            }
+            
+            if (previousNode && previousNode.nodeType === Node.ELEMENT_NODE) {
+              const element = previousNode as HTMLElement;
+              const chipId = element.getAttribute('data-chip-id');
+              if (chipId) {
+                e.preventDefault();
+                // Remove the hair space text node if it exists
+                if (node.textContent === '\u200A' && node.parentNode) {
+                  node.parentNode.removeChild(node);
+                }
+                handleRemoveChip(chipId);
+                return;
+              }
+            }
           }
         }
       }
@@ -1191,7 +953,7 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       onFocus={onFocus}
       onBlur={onBlur}
       onKeyDown={handleKeyDown}
-      className={`w-full min-h-[44px] font-['Mona_Sans:Regular',sans-serif] font-normal leading-[1.35] not-italic text-[16px] transition-colors duration-200 ${textColor} outline-none whitespace-pre-wrap break-words`}
+      className={`w-full min-h-[44px] font-normal leading-[1.35] not-italic text-[16px] transition-colors duration-200 ${textColor} outline-none whitespace-pre-wrap break-words`}
       style={{ fontVariationSettings: "'wdth' 100", wordWrap: 'break-word', caretColor: '#ffffff' }}
       data-placeholder={isSegmentsEmpty(segments) ? "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." : ""}
     />
@@ -1206,10 +968,124 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
   const pendingCursorPositionRef = useRef<{ segmentIndex: number; offset: number } | null>(null);
   const savedRangeRef = useRef<{ startContainer: Node; startOffset: number; endContainer: Node; endOffset: number } | null>(null);
   
+  // Slash command state
+  const [slashMenuOpen, setSlashMenuOpen] = useState(false);
+  const [slashQuery, setSlashQuery] = useState('');
+  const [slashMenuPosition, setSlashMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [selectedSlashIndex, setSelectedSlashIndex] = useState(0);
+  
   // Undo/Redo history
   const historyRef = useRef<TextSegment[][]>([]);
   const historyIndexRef = useRef(-1);
   const isUndoRedoRef = useRef(false);
+  
+  const variables = [
+    { label: "Client's first name", value: "{client_first_name}" },
+    { label: "Client's full name", value: "{client_full_name}" },  
+    { label: "Coach's first name", value: "{coach_first_name}" },
+    { label: "Coach's full name", value: "{coach_full_name}" },
+    { label: "Organization name", value: "{org_name}" },
+    { label: "Booking link", value: "{coach_booking_link}" }
+  ];
+
+  // Filter variables based on slash query - match first letter of each word
+  const getFilteredVariables = () => {
+    if (!slashQuery) return variables;
+    
+    const query = slashQuery.toLowerCase();
+    return variables.filter(v => {
+      // Split label into words and check if any word starts with the query
+      const words = v.label.toLowerCase().split(/\s+/);
+      return words.some(word => word.startsWith(query));
+    });
+  };
+  
+  const filteredVariables = getFilteredVariables();
+
+  // Handle slash command state changes
+  const handleSlashCommand = (query: string | null, position: { top: number; left: number } | null) => {
+    if (query === null) {
+      setSlashMenuOpen(false);
+      setSlashQuery('');
+      setSlashMenuPosition(null);
+      setSelectedSlashIndex(0);
+    } else {
+      setSlashMenuOpen(true);
+      setSlashQuery(query);
+      setSlashMenuPosition(position);
+      // Reset selection when query changes
+      setSelectedSlashIndex(0);
+    }
+  };
+
+  // Handle arrow key navigation in slash menu
+  useEffect(() => {
+    if (!slashMenuOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedSlashIndex(prev => Math.min(prev + 1, filteredVariables.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedSlashIndex(prev => Math.max(prev - 1, 0));
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [slashMenuOpen, filteredVariables.length]);
+
+  // Handle selecting a variable from slash menu
+  const handleSlashSelect = () => {
+    if (filteredVariables.length === 0) return;
+    
+    const selected = filteredVariables[selectedSlashIndex];
+    if (!selected) return;
+    
+    // Delete the slash and query text, then insert the chip
+    deleteSlashAndQuery();
+    insertVariable(selected.label);
+    
+    // Close the menu
+    setSlashMenuOpen(false);
+    setSlashQuery('');
+    setSlashMenuPosition(null);
+    setSelectedSlashIndex(0);
+  };
+
+  // Delete the slash and query from the text
+  const deleteSlashAndQuery = () => {
+    if (!editableRef.current) return;
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    
+    // Find the slash character and delete from there to cursor
+    const textNode = range.startContainer;
+    if (textNode.nodeType !== Node.TEXT_NODE) return;
+    
+    const text = textNode.textContent || '';
+    const cursorPos = range.startOffset;
+    
+    // Find the last slash before cursor
+    const beforeCursor = text.substring(0, cursorPos);
+    const slashIndex = beforeCursor.lastIndexOf('/');
+    
+    if (slashIndex >= 0) {
+      // Delete from slash to cursor
+      const newText = text.substring(0, slashIndex) + text.substring(cursorPos);
+      textNode.textContent = newText;
+      
+      // Position cursor where slash was
+      range.setStart(textNode, slashIndex);
+      range.setEnd(textNode, slashIndex);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  };
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1539,15 +1415,18 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
 
     // Create the chip element with new style
     const chipSpan = document.createElement('span');
-    chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${ml} ${mr} my-[1.5px] whitespace-nowrap relative`;
+    // Remove vertical margins so the line height doesn't grow when a chip is added
+    chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${ml} ${mr} whitespace-nowrap relative`;
     chipSpan.style.backgroundColor = colors.bg;
     chipSpan.style.color = colors.text;
     chipSpan.contentEditable = 'false';
     chipSpan.setAttribute('data-chip-id', chipId);
     chipSpan.style.border = `1px solid ${colors.border}`;
+    // Keep the chip aligned to the text baseline so the text line doesn't jump vertically
+    chipSpan.style.verticalAlign = 'baseline';
 
     const textSpan = document.createElement('span');
-    textSpan.className = "font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic";
+    textSpan.className = "font-medium leading-[1.43] not-italic";
     textSpan.style.fontVariationSettings = "'wdth' 100";
     textSpan.textContent = variable;
 
@@ -1564,89 +1443,175 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     chipSpan.appendChild(textSpan);
     chipSpan.appendChild(button);
     
-    // Insert the chip
+    // Insert the chip at the current caret position
     range.insertNode(chipSpan);
     
-    // Position cursor directly after the chip (no extra characters needed)
-    range.setStartAfter(chipSpan);
-    range.collapse(true);
-
-    // Update selection to position after the chip
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-
+    // Clean up a stray newline text node *immediately before* the chip, which can create a blank line
+    const prevTextSibling = chipSpan.previousSibling;
+    if (prevTextSibling && prevTextSibling.nodeType === Node.TEXT_NODE) {
+      const textNode = prevTextSibling as Text;
+      const value = textNode.textContent ?? '';
+      // If this text node is effectively just a newline/whitespace, remove it to avoid an extra blank line
+      if (/^[\r\n]+[\t ]*$/.test(value)) {
+        textNode.parentNode?.removeChild(textNode);
+      }
+    }
+    
     // Mark that we want cursor after this chip
     pendingCursorAfterChipRef.current = chipId;
-
-    // Ensure focus is maintained before triggering input event
-    editableRef.current.focus();
 
     // Trigger input event to sync segments
     const event = new Event('input', { bubbles: true });
     editableRef.current.dispatchEvent(event);
+    
+    // Position cursor after the chip with a slight delay to ensure DOM is fully synced
+    const editable = editableRef.current;
+    setTimeout(() => {
+      if (!editable) return;
+      
+      const insertedChip = editable.querySelector(`[data-chip-id="${chipId}"]`);
+      if (!insertedChip) return;
+      
+      editable.focus();
+      
+      const newRange = document.createRange();
+      const newSelection = window.getSelection();
+      
+      // Position cursor with visual spacing after the chip
+      const nextSibling = insertedChip.nextSibling;
+      if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE && nextSibling.textContent && nextSibling.textContent.trim().length > 0) {
+        // Position at start of existing text node (skip any leading whitespace)
+        let offset = 0;
+        const text = nextSibling.textContent;
+        while (offset < text.length && /[\s\u200B-\u200D\uFEFF]/.test(text[offset])) {
+          offset++;
+        }
+        newRange.setStart(nextSibling, offset);
+      } else {
+        // Create a hair space (U+200A) for smaller visual spacing (~2px), then position cursor after it
+        const thinSpace = document.createTextNode('\u200A');
+        insertedChip.parentNode?.insertBefore(thinSpace, insertedChip.nextSibling);
+        newRange.setStart(thinSpace, 1);
+      }
+      newRange.collapse(true);
+      
+      newSelection?.removeAllRanges();
+      newSelection?.addRange(newRange);
+      
+      pendingCursorAfterChipRef.current = null;
+    }, 50);
   };
-
-  const variables = [
-    "Client's first name",
-    "Client's full name",
-    "Coach's first name",
-    "Coach's full name",
-    "Organization name",
-    "Coach booking link"
-  ];
   
   return (
-    <div ref={containerRef} className="bg-[#404045] relative rounded-[8px] shrink-0 w-full overflow-hidden">
-      <div className="size-full">
-        <div className="content-stretch flex flex-col items-start pt-[12px] px-[16px] pb-[12px] relative w-full">
-          <Frame6 
-            segments={segments} 
-            onSegmentsChange={setSegments} 
-            isFocused={isFocused} 
-            onFocus={handleFocus} 
-            onBlur={() => {
-              // Save cursor position before blur
-              saveCursorPosition();
-            }}
-            onCursorChange={saveCursorPosition}
-            containerRef={editableRef}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-          />
-          {/* Personalize section - Only show when focused */}
-          {isFocused && (
-            <div className="bg-[#36363a] relative rounded-[12px] w-full mt-[24px]">
-              <div className="size-full">
-                <div className="content-stretch flex flex-col gap-[12px] items-start overflow-clip p-[16px] relative size-full">
-                  <div className="flex flex-col font-['Mona_Sans:Medium',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-nowrap text-white" style={{ fontVariationSettings: "'wdth' 100" }}>
-                    <p className="leading-none">Personalize</p>
-                  </div>
-                  <div className="content-start flex flex-wrap gap-x-[6px] gap-y-[5px] items-start relative shrink-0 w-full">
-                    {variables.map((variable) => {
-                      const colors = getChipColor(variable);
-                      return (
-                        <button
-                          key={variable}
-                          onMouseDown={(e) => {
-                            // Prevent blur when clicking the chip
-                            e.preventDefault();
-                          }}
-                          onClick={() => insertVariable(variable)}
-                          className="relative inline-flex items-center rounded-[6px] px-[6px] py-[2px] text-[12px] cursor-pointer transition-opacity hover:opacity-80"
-                          style={{ backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
-                        >
-                          <span className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.43] not-italic" style={{ fontVariationSettings: "'wdth' 100" }}>{variable}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+    <div ref={containerRef} className="bg-[#404045] relative rounded-[8px] shrink-0 w-full">
+      <div className="content-stretch flex flex-col items-start pt-[12px] px-[16px] pb-[12px] relative w-full overflow-visible">
+          {/* Editable text area with relative positioning for dropdown */}
+          <div className="relative w-full overflow-visible">
+            <Frame6 
+              segments={segments} 
+              onSegmentsChange={setSegments} 
+              isFocused={isFocused} 
+              onFocus={handleFocus} 
+              onBlur={() => {
+                // Save cursor position before blur
+                saveCursorPosition();
+              }}
+              onCursorChange={saveCursorPosition}
+              containerRef={editableRef}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onSlashCommand={handleSlashCommand}
+              slashMenuOpen={slashMenuOpen}
+              onSlashSelect={handleSlashSelect}
+              selectedSlashIndex={selectedSlashIndex}
+            />
+            
+            {/* Slash command dropdown */}
+            {slashMenuOpen && slashMenuPosition && filteredVariables.length > 0 && (
+              <div
+                className="absolute"
+                style={{
+                  top: Math.max(0, slashMenuPosition.top),
+                  left: Math.max(0, slashMenuPosition.left - 4),
+                  transform: 'translateY(calc(-100% - 2px))', // bottom sits 2px above cursor
+                  background: '#3a3a3e', // 5% darker than previous (#3d3d42)
+                  border: '1px solid rgba(255, 255, 255, 0.1)', // 10% opacity border
+                  borderRadius: 8,
+                  boxShadow: '0 6px 18px rgba(0,0,0,0.22)', // softer shadow
+                  padding: '6px',
+                  width: '200px',
+                  zIndex: 9999,
+                }}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                {filteredVariables.map((variable, index) => (
+                  <button
+                    key={variable.label}
+                    className="w-full flex items-center justify-start text-left px-[14px] py-[10px] text-[14px] font-normal transition-colors"
+                    style={{
+                      fontVariationSettings: "'wdth' 100",
+                      background: index === selectedSlashIndex ? '#4d4d51' : 'transparent', // ~10% lighter than dropdown bg
+                      color: '#ffffff',
+                      paddingLeft: '8px',   // left padding +2px
+                      paddingTop: '6px',    // total 6px top
+                      paddingBottom: '6px', // total 6px bottom
+                      borderRadius: 6,
+                    }}
+                    onClick={() => {
+                      setSelectedSlashIndex(index);
+                      handleSlashSelect();
+                    }}
+                    onMouseDown={(e) => e.preventDefault()} // keep focus in editor
+                    onMouseUp={(e) => e.preventDefault()}   // avoid blur before caret restore
+                    onMouseEnter={() => setSelectedSlashIndex(index)}
+                  >
+                    {variable.label}
+                  </button>
+                ))}
               </div>
-              <div aria-hidden="true" className="absolute border border-[rgba(255,255,255,0.05)] border-solid inset-0 pointer-events-none rounded-[12px]" />
+            )}
+          </div>
+          
+          {/* Hint section - Always show when focused */}
+          {isFocused && (
+            <div
+              className="bg-[#36363a] flex items-center mt-[24px] rounded-[8px] w-fit"
+              style={{
+                paddingLeft: '8px',
+                paddingRight: '8px',
+                paddingTop: '8px',   // top padding reduced by 2px
+                paddingBottom: '6px', // bottom padding reduced by 2px
+                boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.10)', // 10% white stroke
+                columnGap: '6px', // ensure 6px gap between icon and text
+              }}
+            >
+              {/* Original icon preserved */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <line x1="9" x2="15" y1="15" y2="9" />
+              </svg>
+              <span
+                className="text-[14px] font-medium"
+                style={{
+                  fontVariationSettings: "'wdth' 100",
+                  color: 'rgba(255, 255, 255, 0.6)',
+                }}
+              >
+                Use <span className="font-medium">/</span> to quickly insert personalization fields
+              </span>
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }
@@ -1672,7 +1637,7 @@ function Button3() {
   return (
     <div className="bg-[#3e4046] content-stretch flex items-center justify-center p-[10px] relative rounded-[8px] shrink-0" data-name="Button">
       <div aria-hidden="true" className="absolute border border-[rgba(255,255,255,0.05)] border-solid inset-0 pointer-events-none rounded-[8px]" />
-      <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.35] not-italic relative shrink-0 text-[16px] text-nowrap text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
+      <p className="font-medium leading-[1.35] not-italic relative shrink-0 text-[16px] text-nowrap text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
         Cancel
       </p>
     </div>
@@ -1687,7 +1652,7 @@ function Button4({ onClick }: { onClick: () => void }) {
       className="bg-[#3db2e0] content-stretch flex items-center justify-center p-[10px] relative rounded-[8px] shrink-0 cursor-pointer"
       data-name="Button"
     >
-      <p className="font-['Mona_Sans:Medium',sans-serif] font-medium leading-[1.35] not-italic relative shrink-0 text-[16px] text-nowrap text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
+      <p className="font-medium leading-[1.35] not-italic relative shrink-0 text-[16px] text-nowrap text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
         Save Settings
       </p>
     </button>
@@ -1726,9 +1691,9 @@ function MainContent() {
   };
 
   return (
-    <div style={{ gridColumn: 'span 5' }}>
+    <div style={{ gridColumn: 'span 7', maxWidth: '700px' }}>
       <div className="bg-[#27272a] content-stretch flex flex-col gap-[40px] items-start p-[24px] rounded-[4px] w-full">
-        <p className="font-['Mona_Sans:SemiBold',sans-serif] font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
+        <p className="font-semibold leading-[1.43] not-italic relative shrink-0 text-[24px] text-white tracking-[-0.25px]" style={{ fontVariationSettings: "'wdth' 100" }}>
           Invitation Settings
         </p>
         <Frame23 segments={segments} setSegments={setSegments} savedSegments={savedSegments} />
