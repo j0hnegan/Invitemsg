@@ -578,15 +578,20 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
           }
         } else if (element.tagName === 'DIV') {
           // Handle div elements (some browsers use divs for line breaks)
-          // Add newline before processing children
+          // Add newline before processing children, but only if we don't already have one
           if (newSegments.length > 0) {
-            if (newSegments[newSegments.length - 1].type === 'text') {
-              newSegments[newSegments.length - 1].content += '\n';
-            } else {
-              newSegments.push({
-                type: 'text',
-                content: '\n'
-              });
+            const lastSegment = newSegments[newSegments.length - 1];
+            const alreadyHasNewline = lastSegment.type === 'text' && lastSegment.content.endsWith('\n');
+
+            if (!alreadyHasNewline) {
+              if (lastSegment.type === 'text') {
+                lastSegment.content += '\n';
+              } else {
+                newSegments.push({
+                  type: 'text',
+                  content: '\n'
+                });
+              }
             }
           }
           // Process children
