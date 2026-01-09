@@ -173,7 +173,9 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
   const savedCursorPositionRef = useRef<{ segmentIndex: number; offset: number } | null>(null);
   const skipDOMRebuildRef = useRef(false);
   const enterKeyPressedRef = useRef(false);
-  const previousSegmentsRef = useRef<TextSegment[]>([]);
+  // Seed with initial `segments` to avoid first-interaction races (e.g. handleInput
+  // running before the [segments] effect updates this ref).
+  const previousSegmentsRef = useRef<TextSegment[]>(segments);
   const needsRebuildRef = useRef(false);
 
   // Helper to check if segments are truly empty (no chips, no text content)
@@ -222,10 +224,10 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       }
     }
     
-    // Left margin: 0 if at start of line or previous is chip, otherwise 4px
-    const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[4px]';
-    // Right margin: always 4px (next chip will handle its left margin)
-    const mr = 'mr-[4px]';
+    // Left margin: 0 if at start of line or previous is chip, otherwise 3.5px
+    const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[3.5px]';
+    // Right margin: 1px to bring text closer after the variable
+    const mr = 'mr-[1px]';
     
     return { ml, mr };
   };
@@ -254,6 +256,7 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     // Check if structure changed (chips added/removed)
     const isInitialRender = previousSegmentsRef.current.length === 0 && segments.length > 0;
     const structureChanged = !isInitialRender && segmentsStructureChanged(previousSegmentsRef.current, segments);
+    
     previousSegmentsRef.current = segments;
     
     // Skip entire DOM rebuild if Enter was just pressed and structure didn't change
@@ -292,27 +295,77 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     // Check if content is truly empty (only whitespace/newlines)
     const isEmpty = isSegmentsEmpty(segments);
     
-    // Also check if DOM appears empty (might have just a <br> tag)
-    const domAppearsEmpty = containerRef.current && 
-                           (containerRef.current.childNodes.length === 0 || 
-                            (containerRef.current.childNodes.length === 1 && 
-                             containerRef.current.childNodes[0].nodeName === 'BR' &&
-                             containerRef.current.textContent?.trim() === ''));
+    // Also check if DOM appears empty (might have just a <br> tag, empty DIVs, or hair space text nodes)
+    // Hair spaces (\u200A) are inserted after chips for cursor positioning but should not
+    // prevent the placeholder from showing when the editor is otherwise empty.
+    // Empty DIVs (from previous multiline content) should also be considered "invisible".
+    const hasOnlyInvisibleContent = containerRef.current && (() => {
+      const nodes = containerRef.current.childNodes;
+      if (nodes.length === 0) return true;
+      
+      // Check if all nodes are invisible (BRs, empty DIVs, or hair-space-only text nodes)
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node.nodeName === 'BR') continue;
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent || '';
+          if (!/^[\u200A\u200B-\u200D\uFEFF\s]*$/.test(text)) return false;
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          // Empty DIVs (or DIVs with only BR/whitespace) are considered invisible
+          if (el.tagName === 'DIV') {
+            const divText = el.textContent?.trim() || '';
+            if (divText.length > 0) return false;
+            // Check if DIV has only BR or whitespace
+            const hasOnlyBR = el.childNodes.length === 1 && el.childNodes[0].nodeName === 'BR';
+            if (!hasOnlyBR && el.childNodes.length > 0) {
+              // Check if all children are BRs or whitespace text nodes
+              for (let j = 0; j < el.childNodes.length; j++) {
+                const child = el.childNodes[j];
+                if (child.nodeName === 'BR') continue;
+                if (child.nodeType === Node.TEXT_NODE) {
+                  const childText = child.textContent || '';
+                  if (!/^[\u200A\u200B-\u200D\uFEFF\s]*$/.test(childText)) return false;
+                } else {
+                  return false; // Has non-BR, non-whitespace element
+                }
+              }
+            }
+            continue; // This DIV is empty/invisible
+          } else {
+            return false; // Has a non-DIV, non-BR element
+          }
+        }
+      }
+      return true;
+    })();
+    
+    const domAppearsEmpty = hasOnlyInvisibleContent;
     
     // If empty, always clear DOM to ensure :empty pseudo-class works for placeholder
-    if (isEmpty && containerRef.current) {
-      // Always clear DOM when segments are empty to ensure :empty works
-      // This handles cases where DOM might have leftover <br> from browser
+    // This is critical - even if DOM has leftover DIVs/BRs from previous content, we must clear it
+    // so the CSS :empty pseudo-class can match and show the placeholder.
+    // Also check if DOM only has a single <br> (browser auto-inserts this to prevent collapse)
+    const hasOnlySingleBR = containerRef.current && 
+      containerRef.current.childNodes.length === 1 && 
+      containerRef.current.childNodes[0].nodeName === 'BR';
+    
+    if ((isEmpty || hasOnlySingleBR) && containerRef.current) {
       containerRef.current.innerHTML = '';
       shouldPreserveCursorRef.current = false;
       savedCursorPositionRef.current = null;
-      // Don't rebuild segments since we're empty
+      // Force a re-check of the placeholder by triggering a re-render
+      // The data-placeholder attribute will be updated on next render
       return;
     }
     
     // Also handle case where DOM appears empty but segments might not be synced yet
+    // This ensures we clear invisible content (empty DIVs, BRs, hair spaces) even if
+    // segments haven't been updated yet
     if (domAppearsEmpty && isEmpty) {
-      // Already handled above, but this is a safety check
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
       return;
     }
     
@@ -327,44 +380,99 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     needsRebuildRef.current = false;
 
     // Sync segments to DOM content
+    // IMPORTANT: Preserve the browser's native line structure (first line as bare text, 
+    // subsequent lines wrapped in <div>) to avoid visual jumping when inserting chips.
     const container = containerRef.current;
     container.innerHTML = '';
-
-    segments.forEach((segment, index) => {
+    
+    // First, build a flat list of content items with line break markers
+    type ContentItem = { type: 'text', content: string } | { type: 'chip', segment: typeof segments[0] } | { type: 'linebreak' };
+    const contentItems: ContentItem[] = [];
+    
+    segments.forEach((segment) => {
       if (segment.type === 'chip') {
-        const colors = getChipColor(segment.content);
-        const margins = getChipMargins(index, segments);
-        const chipSpan = document.createElement('span');
-        chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${margins.ml} ${margins.mr} my-[1.5px] whitespace-nowrap relative`;
-        chipSpan.style.backgroundColor = colors.bg;
-        chipSpan.style.color = colors.text;
-        chipSpan.contentEditable = 'false';
-        chipSpan.setAttribute('data-chip-id', segment.id!);
-        chipSpan.style.border = `1px solid ${colors.border}`;
-
-        const textSpan = document.createElement('span');
-        textSpan.className = "font-medium leading-[1.43] not-italic";
-        textSpan.style.fontVariationSettings = "'wdth' 100";
-        textSpan.textContent = segment.content;
-
-        const button = document.createElement('button');
-        button.className = 'rounded-full p-[2px] cursor-pointer';
-        button.style.color = colors.text;
-        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-        button.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleRemoveChip(segment.id!);
-        };
-
-        chipSpan.appendChild(textSpan);
-        chipSpan.appendChild(button);
-        container.appendChild(chipSpan);
+        contentItems.push({ type: 'chip', segment });
       } else {
-        const textNode = document.createTextNode(segment.content);
-        container.appendChild(textNode);
+        // Split text by newlines
+        const parts = segment.content.split('\n');
+        parts.forEach((part, partIndex) => {
+          if (part.length > 0) {
+            contentItems.push({ type: 'text', content: part });
+          }
+          if (partIndex < parts.length - 1) {
+            contentItems.push({ type: 'linebreak' });
+          }
+        });
       }
     });
+    
+    // Now render: first line content goes directly in container, 
+    // content after each linebreak goes in a <div>
+    let currentTarget: HTMLElement = container;
+    let isFirstLine = true;
+    let previousItemWasChip = false;
+    
+    const appendChip = (target: HTMLElement, segment: typeof segments[0], atStartOfLine: boolean, prevIsChip: boolean) => {
+      const colors = getChipColor(segment.content);
+      const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[3.5px]'; // 3.5px left margin
+      const mr = 'mr-[1px]'; // 1px right margin to bring text closer after variable
+      const chipSpan = document.createElement('span');
+      chipSpan.className = `inline-flex h-[18px] items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] text-[12px] ${ml} ${mr} whitespace-nowrap relative`;
+      chipSpan.style.backgroundColor = colors.bg;
+      chipSpan.style.color = colors.text;
+      chipSpan.contentEditable = 'false';
+      chipSpan.setAttribute('data-chip-id', segment.id!);
+      chipSpan.style.border = `1px solid ${colors.border}`;
+      chipSpan.style.verticalAlign = 'baseline';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = "font-medium leading-none not-italic";
+      textSpan.style.fontVariationSettings = "'wdth' 100";
+      textSpan.textContent = segment.content;
+
+      const button = document.createElement('button');
+      button.className = 'rounded-full p-[2px] cursor-pointer leading-none';
+      button.style.color = colors.text;
+      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      button.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleRemoveChip(segment.id!);
+      };
+
+      chipSpan.appendChild(textSpan);
+      chipSpan.appendChild(button);
+      target.appendChild(chipSpan);
+    };
+    
+    contentItems.forEach((item, index) => {
+      if (item.type === 'linebreak') {
+        // Before starting a new line, check if the current div is empty
+        // If so, add a <br> to make it visible (preserves blank lines)
+        if (currentTarget !== container && currentTarget.childNodes.length === 0) {
+          currentTarget.appendChild(document.createElement('br'));
+        }
+        // Start a new line - create a div for subsequent content
+        const div = document.createElement('div');
+        container.appendChild(div);
+        currentTarget = div;
+        isFirstLine = false;
+        previousItemWasChip = false;
+      } else if (item.type === 'text') {
+        const textNode = document.createTextNode(item.content);
+        currentTarget.appendChild(textNode);
+        previousItemWasChip = false;
+      } else if (item.type === 'chip') {
+        const atStart = isFirstLine && (index === 0 || contentItems[index - 1]?.type === 'linebreak');
+        appendChip(currentTarget, item.segment, atStart, previousItemWasChip);
+        previousItemWasChip = true;
+      }
+    });
+    
+    // If the last div is empty (linebreak at end), add a <br> to make it visible
+    if (currentTarget !== container && currentTarget.childNodes.length === 0) {
+      currentTarget.appendChild(document.createElement('br'));
+    }
 
     // Restore cursor position after rebuilding
     if (shouldPreserveCursorRef.current && savedCursorPositionRef.current) {
@@ -551,7 +659,8 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       text
         // Drop placeholder NBSP/zero-width chars used for caret positioning
         .replace(/\u00A0/g, '')
-        .replace(/[\u200B-\u200D\uFEFF]/g, '');
+        // Also drop hair space (U+200A) which we insert after chips for caret spacing
+        .replace(/[\u200A\u200B-\u200D\uFEFF]/g, '');
 
     const extractContent = (node: Node) => {
       if (node.nodeType === Node.ELEMENT_NODE) {
@@ -567,6 +676,8 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
           });
         } else if (element.tagName === 'BR') {
           // Handle line break
+          // Note: We don't ignore "filler" BRs here - if a BR appears, it's a real line break.
+          // The DIV handler above already accounts for empty line DIVs (<div><br></div>).
           if (newSegments.length > 0 && newSegments[newSegments.length - 1].type === 'text') {
             newSegments[newSegments.length - 1].content += '\n';
           } else {
@@ -576,19 +687,38 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
             });
           }
         } else if (element.tagName === 'DIV') {
-          // Handle div elements (some browsers use divs for line breaks)
-          // Add newline before processing children
+          // Handle div elements (some browsers use divs to represent new lines/paragraphs)
+          //
+          // When a DIV appears, it represents a line break. However, we need to be careful:
+          // - An empty line might be `<div><br></div>` - we should add ONE newline, not two
+          // - A line with content might be `<div>text</div>` - we should add a newline before processing
+          // - But if we're at the start, don't add a newline
+          
+          const isEmptyLineDiv =
+            element.childNodes.length === 1 &&
+            element.childNodes[0].nodeName === 'BR' &&
+            (element.textContent ?? '').trim() === '';
+
+          // Add newline separator before this DIV's content (except if we're at the very start).
+          // IMPORTANT: Always add a newline before each DIV, even if previous ends with \n.
+          // Each DIV represents a distinct line, so consecutive DIVs need consecutive newlines.
+          // This preserves blank lines like: Line1<div><br></div><div>Line3</div> → "Line1\n\nLine3"
           if (newSegments.length > 0) {
-            if (newSegments[newSegments.length - 1].type === 'text') {
-              newSegments[newSegments.length - 1].content += '\n';
+            const last = newSegments[newSegments.length - 1];
+            if (last.type === 'text') {
+              last.content += '\n';
             } else {
-              newSegments.push({
-                type: 'text',
-                content: '\n'
-              });
+              newSegments.push({ type: 'text', content: '\n' });
             }
           }
-          // Process children
+
+          if (isEmptyLineDiv) {
+            // Empty line: the newline separator above already represents it.
+            // Do not process the BR child (would double-insert a newline).
+            return;
+          }
+
+          // Process children for non-empty lines (including any intentional BRs).
           element.childNodes.forEach(child => extractContent(child));
         } else {
           // Process children of other elements
@@ -609,22 +739,66 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     };
     
     container.childNodes.forEach(node => extractContent(node));
+    
+    // If DOM is completely empty or only has a single <br>, ensure segments are empty
+    // This handles the case where user deletes everything and browser leaves a <br>
+    if (newSegments.length === 0 || 
+        (container.childNodes.length === 1 && container.childNodes[0].nodeName === 'BR' && container.textContent?.trim() === '')) {
+      newSegments = [{ type: 'text', content: '' }];
+    }
 
     // Check if structure changed (will trigger rebuild)
-    const structureChanged = segmentsStructureChanged(previousSegmentsRef.current, newSegments);
+    // IMPORTANT: compare against the current `segments` prop (the state *before* this input),
+    // not previousSegmentsRef, to prevent "first input" false-positives that cause a DOM rebuild
+    // and cursor restoration to the pre-typed position.
+    const structureChanged = segmentsStructureChanged(segments, newSegments);
     
-    // Only save cursor position if structure changed (will need rebuild)
-    if (structureChanged) {
+    // Check if chips were actually added/removed (not just text content changed)
+    const prevChipCount = segments.filter(s => s.type === 'chip').length;
+    const newChipCount = newSegments.filter(s => s.type === 'chip').length;
+    const chipsChanged = prevChipCount !== newChipCount;
+    
+    // Only save cursor position if structure changed AND chips were involved.
+    // CRITICAL: Don't save/restore cursor for pure text input - the browser handles it naturally.
+    // Saving/restoring cursor for text-only changes causes the "cursor jumps behind character" bug.
+    // We only need cursor restoration when chips are added/removed.
+    if (structureChanged && chipsChanged) {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0 && containerRef.current.contains(selection.anchorNode!)) {
         const range = selection.getRangeAt(0);
         
         // Calculate character offset excluding chip content
+        // IMPORTANT: For text input, the browser already positioned the cursor correctly.
+        // We only need this offset for restoration after chip insertions/removals.
         let charOffset = 0;
+        const countTextExcludingChips = (node: Node): number => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent?.length || 0;
+          }
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            if (el.hasAttribute('data-chip-id')) return 0;
+            let sum = 0;
+            for (let i = 0; i < node.childNodes.length; i++) {
+              sum += countTextExcludingChips(node.childNodes[i]);
+            }
+            return sum;
+          }
+          return 0;
+        };
         const walkNodes = (node: Node): boolean => {
           if (node === range.startContainer) {
             if (node.nodeType === Node.TEXT_NODE) {
               charOffset += range.startOffset;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              // When the caret is between child nodes, browsers often set startContainer
+              // to an element and use startOffset as the child index. Account for text
+              // in all preceding children (excluding chips).
+              const elementNode = node as Element;
+              const limit = Math.min(range.startOffset, elementNode.childNodes.length);
+              for (let i = 0; i < limit; i++) {
+                charOffset += countTextExcludingChips(elementNode.childNodes[i]);
+              }
             }
             return true; // Found cursor position
           }
@@ -1103,12 +1277,51 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
   }, []);
 
   // Initialize history when field becomes focused
+  // Helper to check if segments are empty (same as in Frame6)
+  const isSegmentsEmpty = (segs: TextSegment[]): boolean => {
+    if (segs.length === 0) return true;
+    if (segs.length === 1 && segs[0].type === 'text' && segs[0].content.trim() === '') return true;
+    const hasChips = segs.some(s => s.type === 'chip');
+    if (hasChips) return false;
+    const allText = segs.every(s => s.type === 'text');
+    if (!allText) return false;
+    const allEmpty = segs.every(s => s.type === 'text' && s.content.trim() === '');
+    return allEmpty;
+  };
+
   const handleFocus = () => {
     if (!isFocused) {
-      // Reset history and store initial state
+      // Reset history and store initial state (empty state)
       historyRef.current = [JSON.parse(JSON.stringify(segments))];
       historyIndexRef.current = 0;
       setIsFocused(true);
+    }
+    
+    // If field is empty, insert placeholder text and select it all (highlight it)
+    // This insertion will be tracked in history so Cmd+Z can undo it
+    const isEmpty = isSegmentsEmpty(segments);
+    if (isEmpty && editableRef.current) {
+      const placeholderText = "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step.";
+      
+      // Insert placeholder text as actual content so we can select it
+      editableRef.current.textContent = placeholderText;
+      
+      // Select all the text to highlight it (as if user dragged cursor over it)
+      setTimeout(() => {
+        if (!editableRef.current) return;
+        const range = document.createRange();
+        range.selectNodeContents(editableRef.current);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        
+        // Trigger input event to sync segments - this will add the placeholder state to history
+        // History: [empty] -> [placeholder text] (Cmd+Z will undo back to empty)
+        const event = new Event('input', { bubbles: true });
+        editableRef.current.dispatchEvent(event);
+      }, 0);
+      
+      return; // Don't save cursor position yet, we just set it
     }
     
     // Save the range when field is focused
@@ -1407,16 +1620,16 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     }
     
     // Set margins based on context
-    const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[4px]';
-    const mr = 'mr-[4px]';
+    const ml = (atStartOfLine || prevIsChip) ? 'ml-0' : 'ml-[3.5px]';
+    const mr = 'mr-[1px]';
 
     const chipId = `chip-${Date.now()}-${Math.random()}`;
     const colors = getChipColor(variable);
 
     // Create the chip element with new style
     const chipSpan = document.createElement('span');
-    // Remove vertical margins so the line height doesn't grow when a chip is added
-    chipSpan.className = `inline-flex items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] py-[2px] text-[12px] ${ml} ${mr} whitespace-nowrap relative`;
+    // Keep chips low-profile so they don't change the surrounding line height.
+    chipSpan.className = `inline-flex h-[18px] items-center gap-[2px] rounded-[6px] pl-[6px] pr-[2px] text-[12px] ${ml} ${mr} whitespace-nowrap relative`;
     chipSpan.style.backgroundColor = colors.bg;
     chipSpan.style.color = colors.text;
     chipSpan.contentEditable = 'false';
@@ -1426,12 +1639,12 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     chipSpan.style.verticalAlign = 'baseline';
 
     const textSpan = document.createElement('span');
-    textSpan.className = "font-medium leading-[1.43] not-italic";
+    textSpan.className = "font-medium leading-none not-italic";
     textSpan.style.fontVariationSettings = "'wdth' 100";
     textSpan.textContent = variable;
 
     const button = document.createElement('button');
-    button.className = 'rounded-full p-[2px] cursor-pointer';
+    button.className = 'rounded-full p-[2px] cursor-pointer leading-none';
     button.style.color = colors.text;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     button.onclick = (e) => {
@@ -1446,16 +1659,8 @@ function Frame4({ segments, setSegments, savedSegments }: { segments: TextSegmen
     // Insert the chip at the current caret position
     range.insertNode(chipSpan);
     
-    // Clean up a stray newline text node *immediately before* the chip, which can create a blank line
-    const prevTextSibling = chipSpan.previousSibling;
-    if (prevTextSibling && prevTextSibling.nodeType === Node.TEXT_NODE) {
-      const textNode = prevTextSibling as Text;
-      const value = textNode.textContent ?? '';
-      // If this text node is effectively just a newline/whitespace, remove it to avoid an extra blank line
-      if (/^[\r\n]+[\t ]*$/.test(value)) {
-        textNode.parentNode?.removeChild(textNode);
-      }
-    }
+    // Don't clean up newlines before chips - this was causing lines to move up.
+    // The browser's DOM structure should be preserved, and handleInput will parse it correctly.
     
     // Mark that we want cursor after this chip
     pendingCursorAfterChipRef.current = chipId;
@@ -1670,10 +1875,10 @@ function ButtonGroup({ onSave }: { onSave: () => void }) {
 
 function MainContent() {
   const [segments, setSegments] = useState<TextSegment[]>([
-    { type: 'text', content: "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." }
+    { type: 'text', content: '' }
   ]);
   const [savedSegments, setSavedSegments] = useState<TextSegment[]>([
-    { type: 'text', content: "I'm excited to support you. Take your time, stay consistent, and I'll help you move forward step by step." }
+    { type: 'text', content: '' }
   ]);
 
   const handleSave = () => {
