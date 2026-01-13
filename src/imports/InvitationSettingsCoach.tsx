@@ -257,6 +257,11 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
     const isInitialRender = previousSegmentsRef.current.length === 0 && segments.length > 0;
     const structureChanged = !isInitialRender && segmentsStructureChanged(previousSegmentsRef.current, segments);
     
+    // Check if chips were actually added/removed (not just text content changed)
+    const prevChipCount = previousSegmentsRef.current.filter(s => s.type === 'chip').length;
+    const currChipCount = segments.filter(s => s.type === 'chip').length;
+    const chipsChanged = prevChipCount !== currChipCount;
+    
     previousSegmentsRef.current = segments;
     
     // Skip entire DOM rebuild if Enter was just pressed and structure didn't change
@@ -369,10 +374,13 @@ function Frame6({ segments, onSegmentsChange, isFocused, onFocus, onBlur, onCurs
       return;
     }
     
-    // Only rebuild DOM if structure changed (chips added/removed), initial render, or explicitly needed
-    // For regular text input, let the browser handle it naturally
-    if (!structureChanged && !needsRebuildRef.current && !isInitialRender) {
-      // Structure didn't change, so just sync text content without full rebuild
+    // Only rebuild DOM if structure changed AND chips were involved, initial render, or explicitly needed
+    // For regular text input or structure changes from empty segment consolidation, let the browser handle it naturally
+    // CRITICAL: Don't rebuild when structureChanged is true but chipsChanged is false - this is just empty segment
+    // consolidation and doesn't require a rebuild. Rebuilding here causes cursor to jump.
+    const shouldRebuild = (structureChanged && chipsChanged) || needsRebuildRef.current || isInitialRender;
+    if (!shouldRebuild) {
+      // No rebuild needed, so just sync text content without full rebuild
       // This preserves the cursor position naturally
       return;
     }
